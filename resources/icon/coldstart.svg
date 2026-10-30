@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ColdStart icon, source of truth. 100x100 units. Render: qlmanage -t -s 500 -o <dir> coldstart.svg, then sips for 65/40 px. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="62%">
+      <stop offset="0" stop-color="#12466E"/>
+      <stop offset="1" stop-color="#061726"/>
+    </radialGradient>
+    <linearGradient id="ice" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#C9F4FF"/>
+      <stop offset="1" stop-color="#3FA3FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" fill="#040C14"/>
+  <circle cx="50" cy="50" r="48" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#ice)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M50 50L50.00 19.00M50.00 32.02L59.01 25.71M50.00 32.02L40.99 25.71M50 50L23.15 34.50M34.43 41.01L33.47 30.05M34.43 41.01L24.46 45.66M50 50L23.15 65.50M34.43 58.99L24.46 54.34M34.43 58.99L33.47 69.95M50 50L50.00 81.00M50.00 67.98L40.99 74.29M50.00 67.98L59.01 74.29M50 50L76.85 65.50M65.57 58.99L66.53 69.95M65.57 58.99L75.54 54.34M50 50L76.85 34.50M65.57 41.01L75.54 45.66M65.57 41.01L66.53 30.05"/>
+  </g>
+  <circle cx="50" cy="50" r="5" fill="#E6FAFF"/>
+  <circle cx="77" cy="77" r="14" fill="#040C14"/>
+  <circle cx="77" cy="77" r="11.5" fill="#22D07A"/>
+  <path d="M73.5 70.5L84 77L73.5 83.5Z" fill="#04140C"/>
+</svg>
