@@ -23,20 +23,13 @@ class ColdStartApp extends Application.AppBase {
     private var _dayIndex as Number = 0;
     private var _lastStartPressAt as Number = -10000;
     private var _tickCount as Number = 0;
-    private var _hrSum as Number = 0;
-    private var _hrCount as Number = 0;
-    private var _baseline as Array<Number> = [] as Array<Number>;
-    private var _shock as ShockTracker = new ShockTracker(null);
-    private var _hrv as HrvTracker = new HrvTracker();
-    private var _listening as Boolean = false;
-    private var _pendingHrv as Number? = null;
+    private var _hr as HrTracker = new HrTracker();
 
     public var target as Number = ColdLogic.TARGET_DEFAULT;
     public var stats as Dictionary = ColdLogic.emptyStats();
     public var elapsed as Number = 0;
     public var lastVibe as Number = 0;
     public var hrNow as Number = 0;
-    public var hrMax as Number = 0;
     // One-shot message on Home (e.g. "Saved").
     public var notice as String? = null;
 
@@ -56,7 +49,6 @@ class ColdStartApp extends Application.AppBase {
     // A shower that is still open when the app stops is saved as it is (not lost).
     public function onStop(state as Dictionary?) as Void {
         stopTimer();
-        stopHrvListener();
         if (_state == STATE_RUNNING) {
             elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
             _recorder.stop();
@@ -104,37 +96,17 @@ class ColdStartApp extends Application.AppBase {
         return true;
     }
 
-    // --- Baseline (Home, 1 s) and shock/HRV results ---------------------------------------------
-
-    public function clearBaseline() as Void {
-        _baseline = [] as Array<Number>;
+    // Heart-rate summary of the shower (valid samples only); null when there was none.
+    public function hrMin() as Number? {
+        return _hr.min;
     }
 
-    // Called by the Home timer; rolling window of the last 10 valid samples.
-    public function sampleBaseline() as Void {
-        if (_state == STATE_IDLE) {
-            _baseline = ShockLogic.pushSample(_baseline, readHeartRate());
-        }
+    public function hrMax() as Number? {
+        return _hr.max;
     }
 
-    public function baselineHr() as Number? {
-        return ShockLogic.median(_baseline);
-    }
-
-    public function restHr() as Number? {
-        return _shock.rest;
-    }
-
-    public function peakHr() as Number? {
-        return _shock.peak;
-    }
-
-    public function calmSec() as Number? {
-        return _shock.calm;
-    }
-
-    public function hrvRmssd() as Number? {
-        return _hrv.rmssd();
+    public function hrAverage() as Number? {
+        return _hr.average();
     }
 
     public function adjustTarget(direction as Number) as Void {
@@ -159,14 +131,8 @@ class ColdStartApp extends Application.AppBase {
         elapsed = 0;
         lastVibe = 0;
         hrNow = 0;
-        hrMax = 0;
-        _hrSum = 0;
-        _hrCount = 0;
+        _hr = new HrTracker();
         _tickCount = 0;
-        _shock = new ShockTracker(ShockLogic.median(_baseline));
-        _hrv = new HrvTracker();
-        _pendingHrv = null;
-        startHrvListener();
         ColdStore.saveOpen([_startedAt, _dayIndex, target, 0] as Array<Number>);
         _state = STATE_RUNNING;
         _timer.start(method(:onTick), 1000, true);
@@ -180,7 +146,6 @@ class ColdStartApp extends Application.AppBase {
             return;
         }
         stopTimer();
-        stopHrvListener();
         elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
         _recorder.stop();
         _state = STATE_REVIEW;
@@ -191,7 +156,6 @@ class ColdStartApp extends Application.AppBase {
         if (_state != STATE_REVIEW) {
             return false;
         }
-        _recorder.setShockSummary(_shock.rest, _shock.peak, _shock.calm, _hrv.rmssd());
         if (!_recorder.save()) {
             return false;
         }
@@ -210,19 +174,10 @@ class ColdStartApp extends Application.AppBase {
         if (!_recorder.discard()) {
             return false;
         }
-        stopHrvListener();
         ColdStore.clearOpen();
         _state = STATE_IDLE;
         notice = "Discarded";
         return true;
-    }
-
-    public function hrAverage() as Number {
-        return _hrCount > 0 ? _hrSum / _hrCount : 0;
-    }
-
-    public function hasHr() as Boolean {
-        return _hrCount > 0;
     }
 
     private function stopTimer() as Void {
@@ -264,14 +219,7 @@ class ColdStartApp extends Application.AppBase {
             } catch (error) {
             }
         }
-        var hr = sampleHeartRate();
-        _shock.onSecond(elapsed, hr);
-        // HRV window closed on the previous tick goes into this tick's record (or invalid).
-        _recorder.setHrv30(_pendingHrv);
-        _pendingHrv = null;
-        if (_hrv.closeIfDue(elapsed)) {
-            _pendingHrv = _hrv.lastWindow;
-        }
+        sampleHeartRate();
         // Crash-recovery checkpoint 15 s after each vibration second (never in a vibrating tick).
         if (vibe == ColdLogic.VIBE_NONE && ColdLogic.checkpointDue(elapsed)) {
             ColdStore.saveOpen([_startedAt, _dayIndex, target, elapsed] as Array<Number>);
@@ -286,7 +234,7 @@ class ColdStartApp extends Application.AppBase {
     private function readHeartRate() as Number? {
         try {
             var info = Activity.getActivityInfo();
-            if (info != null && ShockLogic.validHr(info.currentHeartRate)) {
+            if (info != null && ColdLogic.validHr(info.currentHeartRate)) {
                 return info.currentHeartRate as Number;
             }
         } catch (error) {
@@ -294,7 +242,7 @@ class ColdStartApp extends Application.AppBase {
         try {
             if (Sensor has :getInfo) {
                 var sensorInfo = Sensor.getInfo();
-                if (sensorInfo != null && ShockLogic.validHr(sensorInfo.heartRate)) {
+                if (sensorInfo != null && ColdLogic.validHr(sensorInfo.heartRate)) {
                     return sensorInfo.heartRate as Number;
                 }
             }
@@ -303,60 +251,11 @@ class ColdStartApp extends Application.AppBase {
         return null;
     }
 
-    private function sampleHeartRate() as Number? {
+    private function sampleHeartRate() as Void {
         var hr = readHeartRate();
         if (hr != null) {
             hrNow = hr;
-            _hrSum += hr;
-            _hrCount++;
-            if (hr > hrMax) {
-                hrMax = hr;
-            }
-        }
-        return hr;
-    }
-
-    private function startHrvListener() as Void {
-        try {
-            if (Sensor has :registerSensorDataListener) {
-                Sensor.registerSensorDataListener(method(:onSensorData),
-                    {:period => 1, :heartBeatIntervals => {:enabled => true}});
-                _listening = true;
-            }
-        } catch (error) {
-            _listening = false;
-        }
-    }
-
-    private function stopHrvListener() as Void {
-        if (!_listening) {
-            return;
-        }
-        _listening = false;
-        try {
-            Sensor.unregisterSensorDataListener();
-        } catch (error) {
-        }
-    }
-
-    // Public: sensor callbacks must be public. Only adds to running sums.
-    public function onSensorData(data as Sensor.SensorData) as Void {
-        if (_state != STATE_RUNNING) {
-            return;
-        }
-        try {
-            var hrData = data.heartRateData;
-            if (hrData == null) {
-                return;
-            }
-            var intervals = hrData.heartBeatIntervals;
-            if (intervals == null) {
-                return;
-            }
-            for (var i = 0; i < intervals.size(); i++) {
-                _hrv.addInterval(intervals[i]);
-            }
-        } catch (error) {
+            _hr.add(hr);
         }
     }
 }

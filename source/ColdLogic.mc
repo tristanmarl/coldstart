@@ -9,6 +9,8 @@ module ColdLogic {
     const PULSE_EVERY = 30;
     const MIN_SAVE_SEC = 10;
     const DAY_SEC = 86400;
+    const HR_MIN = 30;
+    const HR_MAX = 250;
 
     const VIBE_NONE = 0;
     const VIBE_PULSE = 1;
@@ -108,6 +110,20 @@ module ColdLogic {
         return floorDiv(utcSec + utcOffsetSec, DAY_SEC);
     }
 
+    // --- Heart rate -----------------------------------------------------------------------------
+
+    function validHr(hr as Number?) as Boolean {
+        return hr != null && hr >= HR_MIN && hr <= HR_MAX;
+    }
+
+    // "HR 62 · 74 · 118" (min, avg, max); null when nothing was measured.
+    function hrLine(min as Number?, avg as Number?, max as Number?) as String? {
+        if (min == null || avg == null || max == null) {
+            return null;
+        }
+        return "HR " + min.toString() + " · " + avg.toString() + " · " + max.toString();
+    }
+
     // --- Elapsed time and crash recovery ----------------------------------------------------------
 
     // Whole seconds between two System.getTimer() readings (ms, monotonic, wraps like int32);
@@ -195,5 +211,37 @@ module ColdLogic {
             }
         }
         return true;
+    }
+}
+
+// Running min / max / average of the valid heart-rate samples of one shower (sums only).
+class HrTracker {
+    public var min as Number? = null;
+    public var max as Number? = null;
+    private var _sum as Number = 0;
+    private var _count as Number = 0;
+
+    public function initialize() {
+    }
+
+    // Samples outside 30-250 bpm (and null) are ignored.
+    public function add(hr as Number?) as Void {
+        if (!ColdLogic.validHr(hr)) {
+            return;
+        }
+        var v = hr as Number;
+        if (min == null || v < (min as Number)) {
+            min = v;
+        }
+        if (max == null || v > (max as Number)) {
+            max = v;
+        }
+        _sum += v;
+        _count++;
+    }
+
+    // Rounded average; null without samples.
+    public function average() as Number? {
+        return _count > 0 ? (_sum + _count / 2) / _count : null;
     }
 }

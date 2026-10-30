@@ -7,11 +7,6 @@ import Toybox.Lang;
 // recording the shower never depends on the optional target_s field.
 class ShowerRecorder {
     private var _session as ActivityRecording.Session? = null;
-    private var _restField as FitContributor.Field? = null;
-    private var _peakField as FitContributor.Field? = null;
-    private var _calmField as FitContributor.Field? = null;
-    private var _hrvField as FitContributor.Field? = null;
-    private var _hrv30Field as FitContributor.Field? = null;
 
     public function start(targetSec as Number) as Boolean {
         if (_session != null) {
@@ -67,49 +62,6 @@ class ShowerRecorder {
             var field = session.createField("target_s", 0, FitContributor.DATA_TYPE_UINT16,
                 {:mesgType => FitContributor.MESG_TYPE_SESSION, :units => "s"});
             field.setData(targetSec);
-        } catch (error) {
-        }
-        // Shock/HRV fields; each created on its own so one failure leaves the others.
-        var summary = FitContributor.MESG_TYPE_SESSION;
-        _restField = makeField(session, "hr_rest", 1, FitContributor.DATA_TYPE_UINT8, summary, "bpm");
-        _peakField = makeField(session, "hr_peak", 2, FitContributor.DATA_TYPE_UINT8, summary, "bpm");
-        _calmField = makeField(session, "calm_s", 3, FitContributor.DATA_TYPE_UINT16, summary, "s");
-        _hrvField = makeField(session, "hrv_rmssd", 4, FitContributor.DATA_TYPE_UINT16, summary, "ms");
-        _hrv30Field = makeField(session, "hrv_30s", 5, FitContributor.DATA_TYPE_UINT16,
-            FitContributor.MESG_TYPE_RECORD, "ms");
-        setHrv30(null);
-    }
-
-    private function makeField(session as ActivityRecording.Session, name as String, id as Number,
-                               type as FitContributor.DataType, mesg as Number,
-                               units as String) as FitContributor.Field? {
-        try {
-            return session.createField(name, id, type, {:mesgType => mesg, :units => units});
-        } catch (error) {
-            return null;
-        }
-    }
-
-    // Session summary values; null means "not measured" and is written as the FIT invalid value.
-    public function setShockSummary(rest as Number?, peak as Number?, calm as Number?,
-                                    rmssd as Number?) as Void {
-        writeField(_restField, ShockLogic.fitByte(rest));
-        writeField(_peakField, ShockLogic.fitByte(peak));
-        writeField(_calmField, ShockLogic.fitWord(calm));
-        writeField(_hrvField, ShockLogic.fitWord(rmssd));
-    }
-
-    // Record field: the closed window's RMSSD for one record, invalid otherwise.
-    public function setHrv30(value as Number?) as Void {
-        writeField(_hrv30Field, ShockLogic.fitWord(value));
-    }
-
-    private function writeField(field as FitContributor.Field?, value as Number) as Void {
-        if (field == null) {
-            return;
-        }
-        try {
-            (field as FitContributor.Field).setData(value);
         } catch (error) {
         }
     }

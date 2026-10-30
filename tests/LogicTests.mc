@@ -115,129 +115,35 @@ function testStatsValidation(logger as Test.Logger) as Boolean {
 }
 
 (:test)
-function testBaselineMedian(logger as Test.Logger) as Boolean {
-    var buf = [] as Array<Number>;
-    var ok = check(logger, ShockLogic.median(buf) == null, "empty median is null");
-    buf = ShockLogic.pushSample(buf, 70);
-    buf = ShockLogic.pushSample(buf, 0);
-    buf = ShockLogic.pushSample(buf, null);
-    buf = ShockLogic.pushSample(buf, 300);
-    ok = ok && check(logger, buf.size() == 1, "invalid samples ignored");
-    buf = ShockLogic.pushSample(buf, 90);
-    buf = ShockLogic.pushSample(buf, 60);
-    ok = ok && check(logger, ShockLogic.median(buf) == 70, "odd median");
-    buf = ShockLogic.pushSample(buf, 80);
-    ok = ok && check(logger, ShockLogic.median(buf) == 75, "even median");
-    for (var i = 0; i < 20; i++) {
-        buf = ShockLogic.pushSample(buf, 100 + i);
-    }
-    ok = ok && check(logger, buf.size() == 10 && buf[0] == 110, "rolling window of 10");
-    ok = ok && check(logger, ShockLogic.median(buf) == 115, "median of newest samples");
+function testHrTracker(logger as Test.Logger) as Boolean {
+    var t = new HrTracker();
+    var ok = check(logger, t.min == null && t.max == null && t.average() == null, "empty tracker");
+    t.add(70);
+    t.add(0);
+    t.add(null);
+    t.add(300);
+    t.add(29);
+    ok = ok && check(logger, t.min == 70 && t.max == 70 && t.average() == 70, "invalid samples ignored");
+    t.add(62);
+    t.add(118);
+    t.add(30);
+    t.add(250);
+    ok = ok && check(logger, t.min == 30 && t.max == 250, "30 and 250 are valid bounds");
+    var u = new HrTracker();
+    u.add(62);
+    u.add(75);
+    u.add(80);
+    ok = ok && check(logger, u.min == 62 && u.max == 80 && u.average() == 72, "min, max, rounded average");
     return ok;
 }
 
 (:test)
-function testShockPeakAndCalm(logger as Test.Logger) as Boolean {
-    var t = new ShockTracker(60);
-    for (var s = 1; s <= 5; s++) {
-        t.onSecond(s, 60 + s * 12);
-    }
-    // Peak 120 at second 5, then it falls; within rest+10 = 70 from second 20 on.
-    for (var s = 6; s <= 19; s++) {
-        t.onSecond(s, 100);
-    }
-    var ok = check(logger, t.peak == 120, "peak is the max");
-    ok = ok && check(logger, t.calm == null, "not calm while above the band");
-    for (var s = 20; s <= 35; s++) {
-        t.onSecond(s, 68);
-    }
-    ok = ok && check(logger, t.calm == 20, "calm = start of the first 10 s stay");
-    // A peak after 60 s does not count.
-    t.onSecond(70, 200);
-    ok = ok && check(logger, t.peak == 120, "peak window is the first 60 s");
-
-    var n = new ShockTracker(60);
-    for (var s = 1; s <= 120; s++) {
-        n.onSecond(s, s % 5 == 0 ? 65 : 110);
-    }
-    ok = ok && check(logger, n.peak == 110 && n.calm == null, "never calm: a brief dip is not enough");
-
-    var gap = new ShockTracker(60);
-    gap.onSecond(1, 120);
-    for (var s = 2; s <= 8; s++) {
-        gap.onSecond(s, 65);
-    }
-    gap.onSecond(9, null);
-    for (var s = 10; s <= 18; s++) {
-        gap.onSecond(s, 65);
-    }
-    ok = ok && check(logger, gap.calm == null, "missing HR breaks the stay");
-    gap.onSecond(19, 65);
-    ok = ok && check(logger, gap.calm == 10, "stay of 10 s after the gap");
-
-    var none = new ShockTracker(null);
-    none.onSecond(1, 120);
-    ok = ok && check(logger, none.peak == null && none.calm == null, "no baseline, no shock values");
-    return ok;
-}
-
-(:test)
-function testHrvFilteringAndRmssd(logger as Test.Logger) as Boolean {
-    var h = new HrvTracker();
-    h.addInterval(100);
-    h.addInterval(2500);
-    var ok = check(logger, h.rmssd() == null, "out-of-range intervals dropped");
-    // 800, 820, 800, 820 ... successive differences are all 20 ms: RMSSD 20.
-    for (var i = 0; i < 12; i++) {
-        h.addInterval(i % 2 == 0 ? 800 : 820);
-    }
-    ok = ok && check(logger, h.rmssd() == 20, "RMSSD of alternating 800/820 is 20");
-    // A 40 % jump is an artifact and is skipped without changing the reference.
-    h.addInterval(1150);
-    h.addInterval(800);
-    ok = ok && check(logger, h.rmssd() != null, "artifact rejected");
-    var h2 = new HrvTracker();
-    h2.addInterval(1000);
-    h2.addInterval(1200);
-    h2.addInterval(1000);
-    // 1200 is exactly +20 %: kept; differences 200 and 200 -> too few for a value.
-    ok = ok && check(logger, h2.rmssd() == null, "needs 10 differences");
-    var diffs = new HrvTracker();
-    diffs.addInterval(1000);
-    for (var i = 0; i < 10; i++) {
-        diffs.addInterval(i % 2 == 0 ? 1100 : 1000);
-    }
-    ok = ok && check(logger, diffs.rmssd() == 100, "known RMSSD of 1000/1100");
-    // A drift larger than 20 % that persists is accepted as the new reference after 5 drops.
-    var shift = new HrvTracker();
-    shift.addInterval(500);
-    for (var i = 0; i < 5; i++) {
-        shift.addInterval(900);
-    }
-    shift.addInterval(905);
-    ok = ok && check(logger, shift.rmssd() == null, "reference reset after repeated rejects");
-    return ok;
-}
-
-(:test)
-function testHrvWindowsAndFitMapping(logger as Test.Logger) as Boolean {
-    var h = new HrvTracker();
-    var ok = check(logger, !h.closeIfDue(29), "window not due at 29 s");
-    // 11 intervals in the first window.
-    for (var i = 0; i < 11; i++) {
-        h.addInterval(i % 2 == 0 ? 800 : 840);
-    }
-    ok = ok && check(logger, h.closeIfDue(30), "window closes at 30 s");
-    ok = ok && check(logger, h.lastWindow == 40, "valid window RMSSD");
-    ok = ok && check(logger, !h.closeIfDue(31), "only once per window");
-    // Window 2 has only 5 intervals: invalid.
-    for (var i = 0; i < 5; i++) {
-        h.addInterval(i % 2 == 0 ? 800 : 840);
-    }
-    ok = ok && check(logger, h.closeIfDue(60) && h.lastWindow == null, "sparse window is invalid");
-    ok = ok && check(logger, ShockLogic.fitByte(null) == 255 && ShockLogic.fitByte(64) == 64, "uint8 mapping");
-    ok = ok && check(logger, ShockLogic.fitWord(null) == 65535 && ShockLogic.fitWord(45) == 45, "uint16 mapping");
-    ok = ok && check(logger, ShockLogic.fitWord(-1) == 65535 && ShockLogic.fitByte(300) == 255, "out of range is invalid");
+function testHrLine(logger as Test.Logger) as Boolean {
+    var line = ColdLogic.hrLine(62, 74, 118);
+    var ok = check(logger, line != null && (line as String).equals("HR 62 · 74 · 118"), "line format");
+    ok = ok && check(logger, ColdLogic.hrLine(null, null, null) == null, "hidden without HR");
+    ok = ok && check(logger, ColdLogic.validHr(30) && ColdLogic.validHr(250), "valid range");
+    ok = ok && check(logger, !ColdLogic.validHr(29) && !ColdLogic.validHr(251) && !ColdLogic.validHr(null), "invalid range");
     return ok;
 }
 

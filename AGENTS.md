@@ -2,7 +2,7 @@
 
 ## Project Structure
 
-ColdStart is a Monkey C Connect IQ watch app (five-button Garmin watches, Connect IQ 5+, products in `manifest.xml`, reference device Forerunner 965). Pure logic is in `source/ColdLogic.mc` and `source/ShockLogic.mc`; storage, recorder and app state are in `source/`; screens are in `source/ui/`. Tests are in `tests/` (included through `tests.jungle`). Decisions are in `docs/SPEC.md`; build and device evidence belongs in `docs/`.
+ColdStart is a Monkey C Connect IQ watch app (five-button Garmin watches, Connect IQ 5+, products in `manifest.xml`, reference device Forerunner 965). Pure logic is in `source/ColdLogic.mc`; storage, recorder and app state are in `source/`; screens are in `source/ui/`. Tests are in `tests/` (included through `tests.jungle`). Decisions are in `docs/SPEC.md`; build and device evidence belongs in `docs/`.
 
 ## Build, Test, and Run
 
@@ -22,7 +22,7 @@ Always pass `-y` to `monkeyc`, including simulator and unit-test builds. Or run 
 
 Four spaces, typed parameters and returns, `UpperCamelCase` classes, `lowerCamelCase` functions and locals, `UPPER_SNAKE_CASE` constants. Tests are free functions marked `(:test)` taking `Test.Logger`; split long boolean chains into named variables and sequential `check` calls. Prefer focused changes.
 
-Timer and sensor callbacks passed through `method(:callback)` must be public: a private one compiles but fails on the watch. Touch is disabled everywhere: every delegate extends `KeyDelegate`; do not use `Menu2`, confirmations or pickers in the shower flow. No storage writes in the vibration tick.
+Timer callbacks passed through `method(:callback)` must be public: a private one compiles but fails on the watch. Touch is disabled everywhere: every delegate extends `KeyDelegate`; do not use `Menu2`, confirmations or pickers in the shower flow. No storage writes in the vibration tick.
 
 ## Commits and Pull Requests
 

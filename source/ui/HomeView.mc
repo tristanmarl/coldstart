@@ -1,29 +1,10 @@
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.Timer;
 import Toybox.WatchUi;
 
 class HomeView extends WatchUi.View {
-    private var _timer as Timer.Timer = new Timer.Timer();
-
     public function initialize() {
         View.initialize();
-    }
-
-    // Home samples HR once per second for the resting baseline (cheap read only).
-    public function onShow() as Void {
-        getApp().clearBaseline();
-        _timer.start(method(:onSample), 1000, true);
-    }
-
-    public function onHide() as Void {
-        _timer.stop();
-    }
-
-    // Public: timer callbacks must be public.
-    public function onSample() as Void {
-        getApp().sampleBaseline();
-        WatchUi.requestUpdate();
     }
 
     public function onUpdate(dc as Dc) as Void {
@@ -40,12 +21,8 @@ class HomeView extends WatchUi.View {
         Draw.text(dc, lastSec > 0 ? "Last " + ColdLogic.formatClock(lastSec) : "No showers yet",
             h * 70 / 100, Draw.small(dc), lastSec > 0 ? Graphics.COLOR_WHITE : Draw.DIM);
         var notice = app.notice;
-        var base = app.baselineHr();
         if (notice != null) {
             Draw.text(dc, notice as String, h * 80 / 100, Draw.tiny(dc), Draw.OVER);
-        } else {
-            Draw.text(dc, base != null ? "Rest HR " + (base as Number).toString() : "Rest HR --",
-                h * 80 / 100, Draw.tiny(dc), Draw.DIM);
         }
         Icons.browseMarkers(dc);
         Icons.startMarker(dc, "play");

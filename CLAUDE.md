@@ -22,16 +22,20 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 
 ## Architecture
 
-- `source/ColdLogic.mc`: pure logic (target clamp/step, countdown text, vibration schedule, local day index, streak and last-duration stats). `source/ShockLogic.mc`: pure cold-shock and HRV logic (`ShockTracker`, `HrvTracker`, baseline median, FIT invalid mapping). Both are unit-tested in `tests/`.
+- `source/ColdLogic.mc`: pure logic (target clamp/step, countdown text, vibration schedule, local day index, streak and last-duration stats, crash-recovery credit, HR line). `HrTracker` (in `ColdLogic.mc`) keeps min/max/avg of valid heart-rate samples (30-250 bpm). Unit-tested in `tests/`.
 - `source/ColdStore.mc`: `Application.Storage` access (target, stats), always guarded; local UTC offset from the calendar fields.
-- `source/ShowerRecorder.mc`: wraps `ActivityRecording` (Meditation/Breathing, fallback Generic) and the FitContributor fields; every FitContributor failure is swallowed.
-- `source/ColdStartApp.mc`: shower state machine (idle, running, review), 1 s timer, vibration, HR sampling, sensor listener for beat intervals, 800 ms START debounce, save/discard, stop-handling (saves an open shower).
+- `source/ShowerRecorder.mc`: wraps `ActivityRecording` (Meditation/Breathing, fallback Generic) and the single FitContributor field `target_s`; every FitContributor failure is swallowed.
+- `source/ColdStartApp.mc`: shower state machine (idle, running, review), 1 s timer, vibration, HR sampling, 800 ms START debounce, save/discard, stop-handling (saves an open shower).
 - `source/ui/`: views and delegates. Every delegate extends `KeyDelegate`, which consumes all touch callbacks. No `Menu2`, confirmation or picker is used (they accept taps); the discard choice is the key-only `ConfirmView`. `Icons.mc` draws button hints at the edge (angles from the fr965 layout, one place). `Draw.mc` has text helpers and the big-number font choice.
+
+## Icon
+
+`resources/icon/coldstart.svg` is the source. Render with `qlmanage -t -s 500 -o <dir> resources/icon/coldstart.svg` and `sips -z 65 65` / `sips -z 40 40`: `resources/drawables/launcher.png` (65 px), `resources-launcher40/drawables/launcher.png` (40 px, used by the 40 px launcher devices through per-product `resourcePath` lines in `monkey.jungle`), `docs/store/icon-500.png` (store). The `Sensor` permission is kept only for the `Sensor.getInfo()` heart-rate fallback.
 
 ## Rules
 
-- Timer and sensor callbacks passed to `method(:x)` must be public.
-- No storage writes in the vibration tick; `onTick` stays light (FIT `setData` and reads only). The 30 s HRV record value is written on the tick after the window closes so it does not share the vibration second.
+- Timer callbacks passed to `method(:x)` must be public.
+- No storage writes in the vibration tick; `onTick` stays light (HR reads only).
 - Elapsed time is measured with `System.getTimer()` deltas (`ColdLogic.elapsedSec`), never `Time.now()` differences, so a clock sync cannot make it jump; `Time.now()` is only used for the start timestamp and day index.
 - Crash recovery: `startShower` writes the storage key `open` = `[startedAtUtc, dayIndex, target, elapsedSec]`; `onTick` refreshes it when `elapsed % 30 == 15` (never in a vibrating second); save/discard clear it. `onStart` credits a leftover `open` (streak day + last duration) via `ColdLogic.openCredit` if it was at least 10 s and shows "Recovered m:ss". The FIT activity is not recoverable.
 - `monkeyc -l 3` (strict typecheck) must build clean for fr965 and fr255s.

@@ -16,30 +16,9 @@ class SummaryView extends WatchUi.View {
         Draw.text(dc, tooShort ? "Too short" : (hit ? "Target hit" : "Target missed"),
             h * 28 / 100, Draw.small(dc), tooShort || !hit ? Draw.OVER : Draw.COLD);
         Draw.big(dc, ColdLogic.formatClock(app.elapsed), Graphics.COLOR_WHITE);
-        // Rows with no value are skipped; at most three below the number.
-        var lines = [] as Array<String>;
-        if (app.hasHr()) {
-            lines.add("HR " + app.hrAverage().toString() + " avg · " + app.hrMax.toString() + " max");
-        }
-        var rest = app.restHr();
-        var peak = app.peakHr();
-        var calm = app.calmSec();
-        var shock = "";
-        if (rest != null && peak != null) {
-            shock = (rest as Number).toString() + " - " + (peak as Number).toString();
-        }
-        if (calm != null) {
-            shock += (shock.length() > 0 ? " · " : "") + "calm " + ColdLogic.formatClock(calm as Number);
-        }
-        if (shock.length() > 0) {
-            lines.add(shock);
-        }
-        var hrv = app.hrvRmssd();
-        if (hrv != null) {
-            lines.add("HRV (est.) " + (hrv as Number).toString() + " ms");
-        }
-        for (var i = 0; i < lines.size(); i++) {
-            Draw.text(dc, lines[i], h * (69 + 8 * i) / 100, Graphics.FONT_XTINY, Graphics.COLOR_WHITE);
+        var line = ColdLogic.hrLine(app.hrMin(), app.hrAverage(), app.hrMax());
+        if (line != null) {
+            Draw.text(dc, line as String, h * 70 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
         }
         Icons.startMarker(dc, "check");
         Icons.backMarker(dc, "cross");
