@@ -1,0 +1,69 @@
+name: Set up Connect IQ
+description: Java 21, the pinned Linux Connect IQ SDK (cached), the device files for every manifest product and the signing key.
+inputs:
+  dev-key:
+    description: base64 of the developer key (.der)
+    required: true
+  token:
+    description: token that can read the draft ci-devices release of tristanmarl/NextSet (a PAT with repo read access; the default workflow token cannot read another repository)
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: "21"
+    - name: Cache SDK
+      id: sdk-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/ciq-sdk
+        key: ciq-sdk-lin-9.2.0-2026-06-09-92a1605b2
+    - name: Download SDK
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        # URL from https://developer.garmin.com/downloads/connect-iq/sdks/sdks.json (linux, 9.2.0)
+        curl -fsSL -o "$RUNNER_TEMP/sdk.zip" \
+          "https://developer.garmin.com/downloads/connect-iq/sdks/connectiq-sdk-lin-9.2.0-2026-06-09-92a1605b2.zip"
+        mkdir -p ~/ciq-sdk
+        unzip -q "$RUNNER_TEMP/sdk.zip" -d ~/ciq-sdk
+        rm "$RUNNER_TEMP/sdk.zip"
+    - name: Put monkeyc on PATH
+      shell: bash
+      run: |
+        monkeyc_path="$(find ~/ciq-sdk -type f -name monkeyc -path '*/bin/*' | head -1)"
+        test -n "$monkeyc_path" || { echo "monkeyc not found in SDK"; exit 1; }
+        chmod +x "$(dirname "$monkeyc_path")"/*
+        echo "$(dirname "$monkeyc_path")" >> "$GITHUB_PATH"
+    - name: Device files
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+      run: |
+        # Device definitions are not in the SDK zip: the user-uploaded "ci-devices" release asset
+        # ciq-devices.zip of the NextSet repo (made by its scripts/pack-devices.sh, unzips to <device>/...) goes to the
+        # Linux Connect IQ device folder.
+        mkdir -p ~/.Garmin/ConnectIQ/Devices "$RUNNER_TEMP/dev"
+        # The release is a draft (no real tag), so find its asset through the releases API.
+        asset=$(gh api "repos/tristanmarl/NextSet/releases" --jq \
+          '[.[] | select(.draft and .tag_name == "ci-devices") | .assets[] | select(.name == "ciq-devices.zip") | .id][0]')
+        test -n "$asset" && test "$asset" != "null"
+        gh api -H "Accept: application/octet-stream" "repos/tristanmarl/NextSet/releases/assets/$asset" \
+          > "$RUNNER_TEMP/dev/ciq-devices.zip"
+        unzip -q -o "$RUNNER_TEMP/dev/ciq-devices.zip" -d ~/.Garmin/ConnectIQ/Devices
+        missing=""
+        for d in $(grep -o '<iq:product id="[^"]*"' manifest.xml | sed -E 's/.*id="([^"]*)"/\1/' | sort -u); do
+          test -f ~/.Garmin/ConnectIQ/Devices/$d/compiler.json || missing="$missing $d"
+        done
+        test -z "$missing" || { echo "ciq-devices.zip lacks:$missing (re-run scripts/pack-devices.sh in NextSet)"; exit 1; }
+    - name: Signing key
+      shell: bash
+      env:
+        COLDSTART_DEV_KEY: ${{ inputs.dev-key }}
+      run: |
+        umask 077
+        printf '%s' "$COLDSTART_DEV_KEY" | base64 -d > "$RUNNER_TEMP/key.der"
+        test -s "$RUNNER_TEMP/key.der"
+        echo "CIQ_KEY=$RUNNER_TEMP/key.der" >> "$GITHUB_ENV"

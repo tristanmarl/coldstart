@@ -1,0 +1,28 @@
+# Compile check only (monkeyc needs the developer key even for builds). No unit tests here: the
+# simulator needs a GUI, so run scripts/test.sh locally.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-ciq
+        with:
+          dev-key: ${{ secrets.COLDSTART_DEV_KEY }}
+          token: ${{ secrets.NEXTSET_RELEASES_TOKEN }}
+      # fr965 is the reference watch; fr255s is a small MIP watch without vector fonts.
+      - run: |
+          monkeyc -f monkey.jungle -d fr965 -o ColdStart.prg -y "$CIQ_KEY"
+          monkeyc -f monkey.jungle -d fr255s -o ColdStart-fr255s.prg -y "$CIQ_KEY"
+      - name: Remove key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/key.der"
