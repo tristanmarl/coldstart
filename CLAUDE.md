@@ -1,0 +1,37 @@
+# CLAUDE.md
+
+ColdStart is a Monkey C Connect IQ watch app for five-button Garmin watches on Connect IQ 5+ (53 products in `manifest.xml`, minimum API 5.0.0), reference device `fr965`. Toolchain and conventions follow NextSet. Guard APIs some targets lack with `has` (MIP watches such as fr255 have no `Graphics.getVectorFont`). `AGENTS.md` has the repository rules; the original decisions are in `docs/SPEC.md`.
+
+## Commands
+
+SDK 9.2.0 with its `bin` on `PATH`. Every `monkeyc` call needs `-y`.
+
+```sh
+KEY="$HOME/.garmin-keys/ColdStartDeveloperKey.der"
+mkdir -p bin
+monkeyc -f monkey.jungle -d fr965 -o bin/ColdStart.prg -y "$KEY"
+monkeyc -f monkey.jungle -d fr255s -o bin/ColdStart-fr255s.prg -y "$KEY"
+monkeydo bin/ColdStart.prg fr965
+monkeyc --unit-test -f tests.jungle -d fr965 -o bin/ColdStart-tests.prg -y "$KEY"
+monkeydo bin/ColdStart-tests.prg fr965 -t     # without -t it hangs
+scripts/test.sh                                # build + run; exit 0 only on "PASSED (passed=N, failed=0, errors=0)"
+```
+
+`monkeydo` may exit 1 after a passing run; read the summary line. A stale simulator can hang it (`scripts/test.sh` restarts it).
+
+## Architecture
+
+- `source/ColdLogic.mc`: pure logic (target clamp/step, countdown text, vibration schedule, local day index, streak and last-duration stats). `source/ShockLogic.mc`: pure cold-shock and HRV logic (`ShockTracker`, `HrvTracker`, baseline median, FIT invalid mapping). Both are unit-tested in `tests/`.
+- `source/ColdStore.mc`: `Application.Storage` access (target, stats), always guarded; local UTC offset from the calendar fields.
+- `source/ShowerRecorder.mc`: wraps `ActivityRecording` (Meditation/Breathing, fallback Generic) and the FitContributor fields; every FitContributor failure is swallowed.
+- `source/ColdStartApp.mc`: shower state machine (idle, running, review), 1 s timer, vibration, HR sampling, sensor listener for beat intervals, 800 ms START debounce, save/discard, stop-handling (saves an open shower).
+- `source/ui/`: views and delegates. Every delegate extends `KeyDelegate`, which consumes all touch callbacks. No `Menu2`, confirmation or picker is used (they accept taps); the discard choice is the key-only `ConfirmView`. `Icons.mc` draws button hints at the edge (angles from the fr965 layout, one place). `Draw.mc` has text helpers and the big-number font choice.
+
+## Rules
+
+- Timer and sensor callbacks passed to `method(:x)` must be public.
+- No storage writes in the vibration tick; `onTick` stays light (FIT `setData` and reads only). The 30 s HRV record value is written on the tick after the window closes so it does not share the vibration second.
+- Touch stays disabled everywhere; add new delegates by extending `KeyDelegate`.
+- Keep long `&&` chains in tests split into named variables (compiler OOM otherwise).
+- Never commit or print signing keys. Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM beside it, mode 600). Reuse it for updates and keep a backup. CI secret `COLDSTART_DEV_KEY` is the base64 of the DER file; `NEXTSET_RELEASES_TOKEN` is a token that can read NextSet's draft `ci-devices` release.
+- Simulator results are not device results; record them separately in `docs/DEVICE_TESTS.md`.
