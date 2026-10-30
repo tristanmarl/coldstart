@@ -3,12 +3,13 @@ import Toybox.WatchUi;
 
 // Base of every delegate. Actions come ONLY from physical key events (onKey -> onXxxKey).
 // Touch must never do anything: wet fingers or water on the screen must not start, stop, save or
-// discard a shower. On the device the firmware can synthesise behaviours (onSelect, onBack,
-// onNextPage, ...) from touch without going through onTap, so every touch callback AND every
-// behaviour callback is a consumed no-op here. Subclasses override the onXxxKey methods only.
-class KeyDelegate extends WatchUi.BehaviorDelegate {
+// discard a shower. This is an InputDelegate, not a BehaviorDelegate: on a BehaviorDelegate the
+// firmware turns taps into onSelect and the buttons into behaviours (onPreviousPage, ...) that never
+// reach onKey, so behaviours cannot be used. With an InputDelegate a tap reaches only onTap.
+// Subclasses override the onXxxKey methods only.
+class KeyDelegate extends WatchUi.InputDelegate {
     public function initialize() {
-        BehaviorDelegate.initialize();
+        InputDelegate.initialize();
     }
 
     // --- Physical keys ------------------------------------------------------------------------
@@ -56,36 +57,6 @@ class KeyDelegate extends WatchUi.BehaviorDelegate {
     }
 
     public function onMenuKey() as Boolean {
-        return true;
-    }
-
-    // --- Behaviours (can come from touch): never act ------------------------------------------
-
-    public function onSelect() as Boolean {
-        return true;
-    }
-
-    public function onBack() as Boolean {
-        return true;
-    }
-
-    public function onNextPage() as Boolean {
-        return true;
-    }
-
-    public function onPreviousPage() as Boolean {
-        return true;
-    }
-
-    public function onMenu() as Boolean {
-        return true;
-    }
-
-    public function onNextMode() as Boolean {
-        return true;
-    }
-
-    public function onPreviousMode() as Boolean {
         return true;
     }
 

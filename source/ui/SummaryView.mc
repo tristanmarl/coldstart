@@ -83,7 +83,7 @@ class ConfirmView extends WatchUi.View {
             Draw.text(dc, (active ? "> " : "  ") + items[i], h * (46 + 16 * i) / 100,
                 Draw.small(dc), active ? Draw.COLD : Draw.DIM);
         }
-        Draw.text(dc, "START: choose · BACK: cancel", h * 88 / 100, Draw.tiny(dc), Draw.DIM);
+        Draw.text(dc, "START ok · BACK no", h * 78 / 100, Graphics.FONT_XTINY, Draw.DIM);
     }
 }
 
