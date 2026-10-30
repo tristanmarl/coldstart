@@ -108,6 +108,42 @@ module ColdLogic {
         return floorDiv(utcSec + utcOffsetSec, DAY_SEC);
     }
 
+    // --- Elapsed time and crash recovery ----------------------------------------------------------
+
+    // Whole seconds between two System.getTimer() readings (ms, monotonic, wraps like int32);
+    // never negative.
+    function elapsedSec(startMs as Number, nowMs as Number) as Number {
+        var delta = nowMs - startMs;
+        return delta < 0 ? 0 : delta / 1000;
+    }
+
+    // The checkpoint is written 15 s after each vibration second, so a vibrating tick never writes.
+    function checkpointDue(sec as Number) as Boolean {
+        return sec > 0 && sec % PULSE_EVERY == PULSE_EVERY / 2;
+    }
+
+    // Open-shower record: [startedAtUtc, dayIndex, target, elapsedSec]. Returns [day, elapsedSec]
+    // to credit when it is well-formed and at least MIN_SAVE_SEC long, else null.
+    function openCredit(open as Object?) as Array<Number>? {
+        if (!(open instanceof Array)) {
+            return null;
+        }
+        var a = open as Array;
+        if (a.size() != 4) {
+            return null;
+        }
+        for (var i = 0; i < 4; i++) {
+            if (!(a[i] instanceof Number)) {
+                return null;
+            }
+        }
+        var sec = a[3] as Number;
+        if (sec < MIN_SAVE_SEC) {
+            return null;
+        }
+        return [a[1] as Number, sec] as Array<Number>;
+    }
+
     // --- Streak ---------------------------------------------------------------------------------
     // Stats dictionary: last (local day index of the last saved shower, or -1), streak and
     // lastSec (duration of the last saved shower, 0 before the first).

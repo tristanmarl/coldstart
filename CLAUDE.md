@@ -12,6 +12,7 @@ mkdir -p bin
 monkeyc -f monkey.jungle -d fr965 -o bin/ColdStart.prg -y "$KEY"
 monkeyc -f monkey.jungle -d fr255s -o bin/ColdStart-fr255s.prg -y "$KEY"
 monkeydo bin/ColdStart.prg fr965
+monkeyc -l 3 -f monkey.jungle -d fr965 -o bin/ColdStart.prg -y "$KEY"   # strict typecheck, must be clean
 monkeyc --unit-test -f tests.jungle -d fr965 -o bin/ColdStart-tests.prg -y "$KEY"
 monkeydo bin/ColdStart-tests.prg fr965 -t     # without -t it hangs
 scripts/test.sh                                # build + run; exit 0 only on "PASSED (passed=N, failed=0, errors=0)"
@@ -31,6 +32,9 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 
 - Timer and sensor callbacks passed to `method(:x)` must be public.
 - No storage writes in the vibration tick; `onTick` stays light (FIT `setData` and reads only). The 30 s HRV record value is written on the tick after the window closes so it does not share the vibration second.
+- Elapsed time is measured with `System.getTimer()` deltas (`ColdLogic.elapsedSec`), never `Time.now()` differences, so a clock sync cannot make it jump; `Time.now()` is only used for the start timestamp and day index.
+- Crash recovery: `startShower` writes the storage key `open` = `[startedAtUtc, dayIndex, target, elapsedSec]`; `onTick` refreshes it when `elapsed % 30 == 15` (never in a vibrating second); save/discard clear it. `onStart` credits a leftover `open` (streak day + last duration) via `ColdLogic.openCredit` if it was at least 10 s and shows "Recovered m:ss". The FIT activity is not recoverable.
+- `monkeyc -l 3` (strict typecheck) must build clean for fr965 and fr255s.
 - Touch stays disabled everywhere; add new delegates by extending `KeyDelegate`.
 - Keep long `&&` chains in tests split into named variables (compiler OOM otherwise).
 - Never commit or print signing keys. Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM beside it, mode 600). Reuse it for updates and keep a backup. CI secret `COLDSTART_DEV_KEY` is the base64 of the DER file. Device files come from this repo's draft `ci-devices` release (`ciq-devices.zip`, copied from NextSet), read with the workflow token.

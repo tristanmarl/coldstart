@@ -19,6 +19,7 @@ class ColdStartApp extends Application.AppBase {
     private var _timer as Timer.Timer;
     private var _timerStarted as Boolean = false;
     private var _startedAt as Number = 0;
+    private var _startMs as Number = 0;
     private var _dayIndex as Number = 0;
     private var _lastStartPressAt as Number = -10000;
     private var _tickCount as Number = 0;
@@ -49,6 +50,7 @@ class ColdStartApp extends Application.AppBase {
         AppBase.onStart(state);
         target = ColdStore.loadTarget();
         stats = ColdStore.loadStats();
+        recoverOpenShower();
     }
 
     // A shower that is still open when the app stops is saved as it is (not lost).
@@ -56,7 +58,7 @@ class ColdStartApp extends Application.AppBase {
         stopTimer();
         stopHrvListener();
         if (_state == STATE_RUNNING) {
-            elapsed = Time.now().value() - _startedAt;
+            elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
             _recorder.stop();
             _state = STATE_REVIEW;
         }
@@ -68,6 +70,19 @@ class ColdStartApp extends Application.AppBase {
             }
         }
         AppBase.onStop(state);
+    }
+
+    // A shower still marked open at launch means the app died without onStop: credit the streak
+    // day and last duration from the last checkpoint. The FIT activity itself is not recoverable.
+    private function recoverOpenShower() as Void {
+        var credit = ColdLogic.openCredit(ColdStore.loadOpen());
+        ColdStore.clearOpen();
+        if (credit != null) {
+            stats = ColdLogic.recordShower(stats, (credit as Array<Number>)[0],
+                (credit as Array<Number>)[1]);
+            ColdStore.saveStats(stats);
+            notice = "Recovered " + ColdLogic.formatClock((credit as Array<Number>)[1]);
+        }
     }
 
     public function getInitialView() as [Views] or [Views, InputDelegates] {
@@ -139,6 +154,7 @@ class ColdStartApp extends Application.AppBase {
         }
         var now = Time.now();
         _startedAt = now.value();
+        _startMs = System.getTimer();
         _dayIndex = ColdLogic.dayIndex(_startedAt, ColdStore.localOffset(now));
         elapsed = 0;
         lastVibe = 0;
@@ -151,6 +167,7 @@ class ColdStartApp extends Application.AppBase {
         _hrv = new HrvTracker();
         _pendingHrv = null;
         startHrvListener();
+        ColdStore.saveOpen([_startedAt, _dayIndex, target, 0] as Array<Number>);
         _state = STATE_RUNNING;
         _timer.start(method(:onTick), 1000, true);
         _timerStarted = true;
@@ -164,7 +181,7 @@ class ColdStartApp extends Application.AppBase {
         }
         stopTimer();
         stopHrvListener();
-        elapsed = Time.now().value() - _startedAt;
+        elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
         _recorder.stop();
         _state = STATE_REVIEW;
     }
@@ -180,6 +197,7 @@ class ColdStartApp extends Application.AppBase {
         }
         stats = ColdLogic.recordShower(stats, _dayIndex, elapsed);
         ColdStore.saveStats(stats);
+        ColdStore.clearOpen();
         _state = STATE_IDLE;
         notice = "Saved";
         return true;
@@ -193,6 +211,7 @@ class ColdStartApp extends Application.AppBase {
             return false;
         }
         stopHrvListener();
+        ColdStore.clearOpen();
         _state = STATE_IDLE;
         notice = "Discarded";
         return true;
@@ -230,7 +249,7 @@ class ColdStartApp extends Application.AppBase {
             return;
         }
         var previous = elapsed;
-        elapsed = Time.now().value() - _startedAt;
+        elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
         _tickCount++;
         var vibe = ColdLogic.vibeBetween(previous, elapsed, target);
         if (vibe != ColdLogic.VIBE_NONE && (Attention has :vibrate)) {
@@ -252,6 +271,10 @@ class ColdStartApp extends Application.AppBase {
         _pendingHrv = null;
         if (_hrv.closeIfDue(elapsed)) {
             _pendingHrv = _hrv.lastWindow;
+        }
+        // Crash-recovery checkpoint 15 s after each vibration second (never in a vibrating tick).
+        if (vibe == ColdLogic.VIBE_NONE && ColdLogic.checkpointDue(elapsed)) {
+            ColdStore.saveOpen([_startedAt, _dayIndex, target, elapsed] as Array<Number>);
         }
         if (_tickCount % 10 == 0) {
             keepScreenOn();

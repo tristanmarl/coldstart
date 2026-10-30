@@ -8,6 +8,7 @@ import Toybox.Time.Gregorian;
 module ColdStore {
     const KEY_TARGET = "target";
     const KEY_STATS = "stats";
+    const KEY_OPEN = "open";
 
     function loadTarget() as Number {
         try {
@@ -40,10 +41,34 @@ module ColdStore {
 
     function saveStats(stats as Dictionary) as Boolean {
         try {
-            Application.Storage.setValue(KEY_STATS, stats);
+            Application.Storage.setValue(KEY_STATS,
+                stats as Dictionary<Application.Storage.KeyType, Application.Storage.ValueType>);
             return true;
         } catch (error) {
             return false;
+        }
+    }
+
+    // Open-shower record for crash recovery: [startedAtUtc, dayIndex, target, elapsedSec].
+    function saveOpen(open as Array<Number>) as Void {
+        try {
+            Application.Storage.setValue(KEY_OPEN, open as Array<Application.Storage.ValueType>);
+        } catch (error) {
+        }
+    }
+
+    function loadOpen() as Object? {
+        try {
+            return Application.Storage.getValue(KEY_OPEN) as Object?;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function clearOpen() as Void {
+        try {
+            Application.Storage.deleteValue(KEY_OPEN);
+        } catch (error) {
         }
     }
 
@@ -51,7 +76,7 @@ module ColdStore {
     function localOffset(now as Time.Moment) as Number {
         try {
             var info = Gregorian.info(now, Time.FORMAT_SHORT);
-            var asUtc = Gregorian.moment({:year => info.year, :month => info.month,
+            var asUtc = Gregorian.moment({:year => info.year, :month => info.month as Number,
                 :day => info.day, :hour => info.hour, :minute => info.min, :second => info.sec});
             return asUtc.value() - now.value();
         } catch (error) {

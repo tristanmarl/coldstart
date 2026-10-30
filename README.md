@@ -24,6 +24,7 @@ Build a `.prg` (see CLAUDE.md) or take one from a release, connect the watch ove
 - Wrist optical HRV in a shower is noisy and may be empty; treat it as an estimate.
 - Only simulator results exist so far; physical-watch checks are listed in `docs/DEVICE_TESTS.md`.
 - Layouts were checked on fr965 and fr255s only.
+- If the app crashes or is killed mid-shower the FIT activity is lost (it cannot be recovered). The streak day and last duration are credited from a checkpoint written every 30 s on the next launch (shown as "Recovered m:ss"), if the shower lasted at least 10 s.
 - No phone sync or settings: no `Communications` permission.
 
 ## License

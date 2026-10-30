@@ -3,6 +3,10 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 
 class SummaryView extends WatchUi.View {
+    public function initialize() {
+        View.initialize();
+    }
+
     public function onUpdate(dc as Dc) as Void {
         Draw.clear(dc);
         var app = getApp();

@@ -2,14 +2,18 @@
 
 Simulator checks are not hardware acceptance; marks are upgraded only from recorded device results.
 
-## Simulator (2026-10-30)
+## Simulator (0.1.1)
 
-- [x] Unit tests: `PASSED (passed=11, failed=0, errors=0)` in the fr965 simulator (`scripts/test.sh`).
+- [x] Unit tests: `PASSED (passed=13, failed=0, errors=0)` in the fr965 simulator (`scripts/test.sh`).
 - [x] Build: `fr965` and `fr255s` compile without errors or warnings; all 53 manifest products compile.
 - [x] Layout screenshots of Home, Shower and Summary on fr965 and fr255s (`docs/screenshots/`, taken with fixed debug data in a temporary build): content balanced top to bottom, nothing clipped, button hints at the edge.
+- [x] Strict typecheck `monkeyc -l 3` builds clean for fr965 and fr255s.
 - [ ] Not exercised in the simulator: real HR, beat intervals, vibration, saving a FIT activity, keys.
 
 ## Pending physical-watch checks (FR965)
+
+- [ ] **PENDING** (0.1.1) Crash recovery: kill the app (or pull the battery path via a forced restart) during a shower of 30 s or more; on the next launch Home shows "Recovered m:ss", the streak day and "Last" are credited from the checkpoint, and no FIT activity exists for it. A kill within the first 10 s credits nothing.
+- [ ] **PENDING** (0.1.1) Elapsed time survives a phone/clock sync mid-shower without jumping; no checkpoint write lands in a vibrating second (no crash at 30 s pulses or at the target).
 
 - [ ] **PENDING** Touch ignored during the shower: tapping, swiping, long-pressing and wiping the screen with a wet finger on Home, Shower, Summary and the discard choice never starts, stops, saves, discards or changes the target.
 - [ ] **PENDING** Keys: UP/DOWN change the target in 15 s steps and it is remembered after relaunch; START begins, START stops; a second START within 800 ms is ignored; BACK is ignored during the shower and exits on Home.

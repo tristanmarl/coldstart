@@ -240,3 +240,34 @@ function testHrvWindowsAndFitMapping(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, ShockLogic.fitWord(-1) == 65535 && ShockLogic.fitByte(300) == 255, "out of range is invalid");
     return ok;
 }
+
+(:test)
+function testElapsedFromMonotonicTimer(logger as Test.Logger) as Boolean {
+    var ok = check(logger, ColdLogic.elapsedSec(1000, 1000) == 0, "zero at start");
+    ok = ok && check(logger, ColdLogic.elapsedSec(1000, 3999) == 2, "whole seconds");
+    ok = ok && check(logger, ColdLogic.elapsedSec(1000, 121000) == 120, "two minutes");
+    ok = ok && check(logger, ColdLogic.elapsedSec(5000, 4000) == 0, "never negative");
+    return ok;
+}
+
+(:test)
+function testCheckpointAndRecoveryCredit(logger as Test.Logger) as Boolean {
+    var ok = check(logger, ColdLogic.checkpointDue(15) && ColdLogic.checkpointDue(45), "due at 15 and 45");
+    ok = ok && check(logger, !ColdLogic.checkpointDue(0) && !ColdLogic.checkpointDue(30), "not in a vibration second");
+    for (var s = 1; s <= 300; s++) {
+        if (ColdLogic.checkpointDue(s) && ColdLogic.vibeAt(s, 120) != ColdLogic.VIBE_NONE) {
+            ok = false;
+        }
+    }
+    ok = ok && check(logger, ok, "checkpoint never shares a vibrating second (target 120)");
+    var credit = ColdLogic.openCredit([1000, D_MON, 120, 75] as Object?);
+    ok = ok && check(logger, credit != null && (credit as Array<Number>)[0] == D_MON, "credits the day");
+    ok = ok && check(logger, credit != null && (credit as Array<Number>)[1] == 75, "credits the checkpointed duration");
+    ok = ok && check(logger, ColdLogic.openCredit([1000, D_MON, 120, 9] as Object?) == null, "too short is not credited");
+    ok = ok && check(logger, ColdLogic.openCredit([1000, D_MON, 120, 10] as Object?) != null, "10 s is credited");
+    ok = ok && check(logger, ColdLogic.openCredit(null) == null, "null");
+    ok = ok && check(logger, ColdLogic.openCredit([1, 2, 3] as Object?) == null, "wrong size");
+    ok = ok && check(logger, ColdLogic.openCredit([1, 2, 3, "x"] as Object?) == null, "wrong type");
+    ok = ok && check(logger, ColdLogic.openCredit("open" as Object?) == null, "not an array");
+    return ok;
+}
