@@ -1,0 +1,18 @@
+<resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <fitContributions>
+        <!-- Session summary field (id matches ShowerRecorder). -->
+        <fitField id="0" displayInActivitySummary="true" sortOrder="0" precision="0"
+                  dataLabel="@Strings.FitTarget" unitLabel="@Strings.FitUnitSec" />
+        <fitField id="1" displayInActivitySummary="true" sortOrder="1" precision="0"
+                  dataLabel="@Strings.FitHrRest" unitLabel="@Strings.FitUnitBpm" />
+        <fitField id="2" displayInActivitySummary="true" sortOrder="2" precision="0"
+                  dataLabel="@Strings.FitHrPeak" unitLabel="@Strings.FitUnitBpm" />
+        <fitField id="3" displayInActivitySummary="true" sortOrder="3" precision="0"
+                  dataLabel="@Strings.FitCalm" unitLabel="@Strings.FitUnitSec" />
+        <fitField id="4" displayInActivitySummary="true" sortOrder="4" precision="0"
+                  dataLabel="@Strings.FitHrv" unitLabel="@Strings.FitUnitMs" />
+        <!-- Record field: written once per closed 30 s window. -->
+        <fitField id="5" displayInChart="true" chartTitle="@Strings.FitHrv30" fillColor="#33BBFF" sortOrder="5" precision="0"
+                  dataLabel="@Strings.FitHrv30" unitLabel="@Strings.FitUnitMs" />
+    </fitContributions>
+</resources>
