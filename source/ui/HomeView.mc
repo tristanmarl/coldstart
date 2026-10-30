@@ -34,19 +34,19 @@ class HomeDelegate extends KeyDelegate {
         KeyDelegate.initialize();
     }
 
-    public function onPreviousPage() as Boolean {
+    public function onUpKey() as Boolean {
         getApp().adjustTarget(1);
         WatchUi.requestUpdate();
         return true;
     }
 
-    public function onNextPage() as Boolean {
+    public function onDownKey() as Boolean {
         getApp().adjustTarget(-1);
         WatchUi.requestUpdate();
         return true;
     }
 
-    public function onSelect() as Boolean {
+    public function onStartKey() as Boolean {
         var app = getApp();
         if (!app.acceptStart()) {
             return true;
@@ -59,8 +59,9 @@ class HomeDelegate extends KeyDelegate {
         return true;
     }
 
-    // No menu: hold UP does nothing.
-    public function onMenu() as Boolean {
+    // BACK exits the app (popping the root view); this is the only way out of Home.
+    public function onBackKey() as Boolean {
+        WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         return true;
     }
 }

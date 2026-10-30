@@ -22,7 +22,7 @@ Always pass `-y` to `monkeyc`, including simulator and unit-test builds. Or run 
 
 Four spaces, typed parameters and returns, `UpperCamelCase` classes, `lowerCamelCase` functions and locals, `UPPER_SNAKE_CASE` constants. Tests are free functions marked `(:test)` taking `Test.Logger`; split long boolean chains into named variables and sequential `check` calls. Prefer focused changes.
 
-Timer callbacks passed through `method(:callback)` must be public: a private one compiles but fails on the watch. Touch is disabled everywhere: every delegate extends `KeyDelegate`; do not use `Menu2`, confirmations or pickers in the shower flow. No storage writes in the vibration tick.
+Timer callbacks passed through `method(:callback)` must be public: a private one compiles but fails on the watch. Touch is disabled everywhere: every delegate extends `KeyDelegate`, actions live only in its `onXxxKey` methods (reached from `onKey`), and the behaviour and touch callbacks stay no-ops because the firmware can synthesise behaviours from touch; do not use `Menu2`, confirmations or pickers in the shower flow. No storage writes in the vibration tick.
 
 ## Commits and Pull Requests
 

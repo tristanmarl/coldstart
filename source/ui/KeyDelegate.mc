@@ -1,13 +1,95 @@
 import Toybox.Lang;
 import Toybox.WatchUi;
 
-// Base of every delegate: touch is ignored everywhere (wet fingers or water on the screen must
-// never start, stop, save or discard a shower). Each touch callback is consumed so the firmware
-// does not map it to onSelect/onBack/onNextPage. Actions come from the physical keys only.
+// Base of every delegate. Actions come ONLY from physical key events (onKey -> onXxxKey).
+// Touch must never do anything: wet fingers or water on the screen must not start, stop, save or
+// discard a shower. On the device the firmware can synthesise behaviours (onSelect, onBack,
+// onNextPage, ...) from touch without going through onTap, so every touch callback AND every
+// behaviour callback is a consumed no-op here. Subclasses override the onXxxKey methods only.
 class KeyDelegate extends WatchUi.BehaviorDelegate {
     public function initialize() {
         BehaviorDelegate.initialize();
     }
+
+    // --- Physical keys ------------------------------------------------------------------------
+
+    // One press = one action: DOWN/UP edge events of the same press are ignored, the action
+    // event (or an untyped event) dispatches. LIGHT and other keys are left to the firmware.
+    public function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
+        var key = keyEvent.getKey();
+        var type = keyEvent.getType();
+        var handled = key == WatchUi.KEY_ENTER || key == WatchUi.KEY_ESC ||
+            key == WatchUi.KEY_UP || key == WatchUi.KEY_DOWN || key == WatchUi.KEY_MENU;
+        if (!handled) {
+            return false;
+        }
+        if (type == WatchUi.PRESS_TYPE_DOWN || type == WatchUi.PRESS_TYPE_UP) {
+            return true;
+        }
+        if (key == WatchUi.KEY_ENTER) {
+            return onStartKey();
+        } else if (key == WatchUi.KEY_ESC) {
+            return onBackKey();
+        } else if (key == WatchUi.KEY_UP) {
+            return onUpKey();
+        } else if (key == WatchUi.KEY_DOWN) {
+            return onDownKey();
+        }
+        return onMenuKey();
+    }
+
+    // Overridable key actions; the default consumes the key and does nothing.
+    public function onStartKey() as Boolean {
+        return true;
+    }
+
+    public function onBackKey() as Boolean {
+        return true;
+    }
+
+    public function onUpKey() as Boolean {
+        return true;
+    }
+
+    public function onDownKey() as Boolean {
+        return true;
+    }
+
+    public function onMenuKey() as Boolean {
+        return true;
+    }
+
+    // --- Behaviours (can come from touch): never act ------------------------------------------
+
+    public function onSelect() as Boolean {
+        return true;
+    }
+
+    public function onBack() as Boolean {
+        return true;
+    }
+
+    public function onNextPage() as Boolean {
+        return true;
+    }
+
+    public function onPreviousPage() as Boolean {
+        return true;
+    }
+
+    public function onMenu() as Boolean {
+        return true;
+    }
+
+    public function onNextMode() as Boolean {
+        return true;
+    }
+
+    public function onPreviousMode() as Boolean {
+        return true;
+    }
+
+    // --- Touch ---------------------------------------------------------------------------------
 
     public function onTap(clickEvent as WatchUi.ClickEvent) as Boolean {
         return true;

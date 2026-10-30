@@ -10,6 +10,13 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 - [x] Strict typecheck `monkeyc -l 3` builds clean for fr965 and fr255s.
 - [ ] Not exercised in the simulator: real HR, beat intervals, vibration, saving a FIT activity, keys.
 
+## Touch bug in 0.1.1 (user report, physical FR965)
+
+0.1.1 consumed `onTap`, `onSwipe`, `onFlick`, `onDrag`, `onHold` and `onRelease`, but on the user's FR965 touch still triggered actions (unusable in the shower): the firmware evidently delivers behaviours (`onSelect`, `onBack`, `onNextPage`, ...) from touch without going through those callbacks. 0.1.2 makes every behaviour callback a no-op and acts only on physical key events (`onKey`). The simulator reproduces the 0.1.1 bug (a mouse click on Home starts a shower) and shows 0.1.2 ignoring clicks and drags on Home, Shower and Summary (checked 2026-10-30 with injected mouse events). This is not a device result.
+
+- [ ] **PENDING** (0.1.2, FR965) Touch really ignored on the watch: tap, long-press and swipe on Home, Shower, Summary and the discard choice do nothing; the five physical keys still work as listed below (START, BACK, UP, DOWN, hold UP does nothing). LIGHT keeps its firmware behaviour.
+- [ ] **PENDING** (0.1.2) Physical keys reach `onKey` with one action per press (no double action from press/release), including BACK on Home exiting the app. Not verified in the simulator (the buttons could not be driven there).
+
 ## Pending physical-watch checks (FR965)
 
 - [ ] **PENDING** (0.1.1) Crash recovery: kill the app (or pull the battery path via a forced restart) during a shower of 30 s or more; on the next launch Home shows "Recovered m:ss", the streak day and "Last" are credited from the checkpoint, and no FIT activity exists for it. A kill within the first 10 s credits nothing.

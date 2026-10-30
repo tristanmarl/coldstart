@@ -30,7 +30,7 @@ class SummaryDelegate extends KeyDelegate {
         KeyDelegate.initialize();
     }
 
-    public function onSelect() as Boolean {
+    public function onStartKey() as Boolean {
         var app = getApp();
         if (!app.acceptStart()) {
             return true;
@@ -45,12 +45,12 @@ class SummaryDelegate extends KeyDelegate {
         return true;
     }
 
-    public function onBack() as Boolean {
+    public function onBackKey() as Boolean {
         Navigator.confirm(false);
         return true;
     }
 
-    public function onMenu() as Boolean {
+    public function onMenuKey() as Boolean {
         Navigator.confirm(false);
         return true;
     }
@@ -95,19 +95,19 @@ class ConfirmDelegate extends KeyDelegate {
         _view = view;
     }
 
-    public function onPreviousPage() as Boolean {
+    public function onUpKey() as Boolean {
         _view.selected = (_view.selected + 1) % 2;
         WatchUi.requestUpdate();
         return true;
     }
 
-    public function onNextPage() as Boolean {
+    public function onDownKey() as Boolean {
         _view.selected = (_view.selected + 1) % 2;
         WatchUi.requestUpdate();
         return true;
     }
 
-    public function onSelect() as Boolean {
+    public function onStartKey() as Boolean {
         var app = getApp();
         if (!app.acceptStart()) {
             return true;
@@ -125,7 +125,7 @@ class ConfirmDelegate extends KeyDelegate {
         return true;
     }
 
-    public function onBack() as Boolean {
+    public function onBackKey() as Boolean {
         WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
         return true;
     }

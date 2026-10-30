@@ -45,7 +45,7 @@ class ShowerDelegate extends KeyDelegate {
         KeyDelegate.initialize();
     }
 
-    public function onSelect() as Boolean {
+    public function onStartKey() as Boolean {
         var app = getApp();
         if (!app.acceptStart()) {
             return true;
@@ -56,7 +56,7 @@ class ShowerDelegate extends KeyDelegate {
     }
 
     // Never leave silently while recording.
-    public function onBack() as Boolean {
+    public function onBackKey() as Boolean {
         return true;
     }
 }
