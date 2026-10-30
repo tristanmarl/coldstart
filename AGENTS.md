@@ -30,4 +30,4 @@ Short imperative subjects, such as `Fix target step`. Pull requests list build a
 
 ## Security and Configuration
 
-Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM source beside it). Never commit, upload or package either file; keep a backup and reuse the same key for updates. CI uses the `COLDSTART_DEV_KEY` secret (base64 of the DER) and `NEXTSET_RELEASES_TOKEN` (reads NextSet's `ci-devices` draft release). Do not check in SDK files or build artifacts (`bin/`).
+Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM source beside it). Never commit, upload or package either file; keep a backup and reuse the same key for updates. CI uses the `COLDSTART_DEV_KEY` secret (base64 of the DER); device files come from this repo's draft `ci-devices` release. Do not check in SDK files or build artifacts (`bin/`).

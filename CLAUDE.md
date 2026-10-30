@@ -33,5 +33,5 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 - No storage writes in the vibration tick; `onTick` stays light (FIT `setData` and reads only). The 30 s HRV record value is written on the tick after the window closes so it does not share the vibration second.
 - Touch stays disabled everywhere; add new delegates by extending `KeyDelegate`.
 - Keep long `&&` chains in tests split into named variables (compiler OOM otherwise).
-- Never commit or print signing keys. Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM beside it, mode 600). Reuse it for updates and keep a backup. CI secret `COLDSTART_DEV_KEY` is the base64 of the DER file; `NEXTSET_RELEASES_TOKEN` is a token that can read NextSet's draft `ci-devices` release.
+- Never commit or print signing keys. Signing key: `~/.garmin-keys/ColdStartDeveloperKey.der` (PEM beside it, mode 600). Reuse it for updates and keep a backup. CI secret `COLDSTART_DEV_KEY` is the base64 of the DER file. Device files come from this repo's draft `ci-devices` release (`ciq-devices.zip`, copied from NextSet), read with the workflow token.
 - Simulator results are not device results; record them separately in `docs/DEVICE_TESTS.md`.

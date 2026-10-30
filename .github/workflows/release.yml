@@ -28,7 +28,7 @@ jobs:
       - uses: ./.github/actions/setup-ciq
         with:
           dev-key: ${{ secrets.COLDSTART_DEV_KEY }}
-          token: ${{ secrets.NEXTSET_RELEASES_TOKEN }}
+          token: ${{ github.token }}
       - name: Version and tag check
         id: ver
         run: |

@@ -5,7 +5,7 @@ inputs:
     description: base64 of the developer key (.der)
     required: true
   token:
-    description: token that can read the draft ci-devices release of tristanmarl/NextSet (a PAT with repo read access; the default workflow token cannot read another repository)
+    description: token that can read this repository's draft ci-devices release (github.token with contents write)
     required: true
 runs:
   using: composite
@@ -42,22 +42,22 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        # Device definitions are not in the SDK zip: the user-uploaded "ci-devices" release asset
-        # ciq-devices.zip of the NextSet repo (made by its scripts/pack-devices.sh, unzips to <device>/...) goes to the
+        # Device definitions are not in the SDK zip: the "ci-devices" draft release asset ciq-devices.zip
+        # (copied from NextSet, made by its scripts/pack-devices.sh, unzips to <device>/...) goes to the
         # Linux Connect IQ device folder.
         mkdir -p ~/.Garmin/ConnectIQ/Devices "$RUNNER_TEMP/dev"
         # The release is a draft (no real tag), so find its asset through the releases API.
-        asset=$(gh api "repos/tristanmarl/NextSet/releases" --jq \
+        asset=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq \
           '[.[] | select(.draft and .tag_name == "ci-devices") | .assets[] | select(.name == "ciq-devices.zip") | .id][0]')
         test -n "$asset" && test "$asset" != "null"
-        gh api -H "Accept: application/octet-stream" "repos/tristanmarl/NextSet/releases/assets/$asset" \
+        gh api -H "Accept: application/octet-stream" "repos/$GITHUB_REPOSITORY/releases/assets/$asset" \
           > "$RUNNER_TEMP/dev/ciq-devices.zip"
         unzip -q -o "$RUNNER_TEMP/dev/ciq-devices.zip" -d ~/.Garmin/ConnectIQ/Devices
         missing=""
         for d in $(grep -o '<iq:product id="[^"]*"' manifest.xml | sed -E 's/.*id="([^"]*)"/\1/' | sort -u); do
           test -f ~/.Garmin/ConnectIQ/Devices/$d/compiler.json || missing="$missing $d"
         done
-        test -z "$missing" || { echo "ciq-devices.zip lacks:$missing (re-run scripts/pack-devices.sh in NextSet)"; exit 1; }
+        test -z "$missing" || { echo "ciq-devices.zip lacks:$missing (re-pack with NextSet's scripts/pack-devices.sh and replace the ci-devices asset)"; exit 1; }
     - name: Signing key
       shell: bash
       env:
