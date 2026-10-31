@@ -1,0 +1,29 @@
+# Changelog
+
+## 0.1.3
+- **Target alert reworked.** The target now gives a single 1 s vibration at full strength, then a second 1 s vibration 2 s later. The tone plays with the second one, so it can't cut the first short. 0.1.2's three-part pattern with pauses gave no vibration on a Forerunner 965.
+- **Stronger 30 s pulses:** 300 ms at full strength (was 200 ms at 60 %).
+- **"Target!" cue:** for 5 s after the target, the ring and time turn green and "Target!" shows.
+- **Summary heart rate in labelled columns:** MIN, AVG and MAX, with "HR bpm" underneath.
+- README notes that Do Not Disturb can silence app vibrations.
+
+## 0.1.2
+- **Touch is ignored.** Every screen now reads the physical buttons directly. In 0.1.1, a tap on a touchscreen watch could start or stop a shower.
+- Shorter discard-prompt hint ("START ok · BACK no") so it fits the round screen.
+
+## 0.1.1
+- **Crash recovery.** A shower in progress is saved every 30 s. If the app dies mid-shower, the next launch keeps the streak day and the last duration and shows "Recovered m:ss". The Garmin activity itself can't be recovered.
+- **Steadier timer.** It no longer jumps if the watch syncs its clock mid-shower.
+- **Heart rate simplified** to min, avg and max. The cold-shock response and HRV were removed.
+- **New app icon:** an ice-blue snowflake with a green start badge, with a 40 px version for smaller watches.
+- Fixes found by the strict compile check.
+
+## 0.1.0
+- **First release.** A cold-shower timer for 53 five-button Garmin watches on Connect IQ 5 or later:
+  - target countdown, set with UP/DOWN in 15 s steps
+  - pulses every 30 s and an alert at the target
+  - overtime count after the target
+  - Garmin Connect activity (Meditation/Breathing) with heart rate
+  - daily streak and the last duration on Home
+
+**Not yet confirmed on a real watch:** the 0.1.3 vibrations, and touch being ignored.
