@@ -232,8 +232,8 @@ class ColdStartApp extends Application.AppBase {
     }
 
     // Single-profile vibrations (the pattern confirmed on the FR965): 1 s at full strength for the
-    // target (and its repeat), 300 ms for the 30 s pulses; the target also sounds a tone where the
-    // watch has a beeper.
+    // target (and its repeat), 300 ms for the 30 s pulses. The tone goes with the repeat, not the
+    // first target vibration, so a tone cannot cut that one short on watches with a beeper.
     private function alert(kind as Number) as Void {
         try {
             if (Attention has :vibrate) {
@@ -246,7 +246,7 @@ class ColdStartApp extends Application.AppBase {
         } catch (error) {
         }
         try {
-            if (kind == ColdLogic.VIBE_TARGET && (Attention has :playTone)) {
+            if (kind == ColdLogic.VIBE_REPEAT && (Attention has :playTone)) {
                 Attention.playTone(Attention.TONE_ALERT_HI);
             }
         } catch (error) {
