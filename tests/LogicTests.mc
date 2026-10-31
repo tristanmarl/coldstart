@@ -321,3 +321,22 @@ function testAlertsContinueAfterPause(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, cleared[0] != ColdLogic.VIBE_REPEAT, "no repeat after a pause");
     return ok;
 }
+
+(:test)
+function testBreathCue(logger as Test.Logger) as Boolean {
+    var start = ColdLogic.breathCue(0);
+    var lastIn = ColdLogic.breathCue(3);
+    var firstOut = ColdLogic.breathCue(4);
+    var lastOut = ColdLogic.breathCue(9);
+    var nextIn = ColdLogic.breathCue(10);
+    var ok = check(logger, start != null && (start as String).equals("Breathe in"), "starts with in");
+    ok = ok && check(logger, lastIn != null && (lastIn as String).equals("Breathe in"), "in lasts 4 s");
+    ok = ok && check(logger, firstOut != null && (firstOut as String).equals("Breathe out"), "then out");
+    ok = ok && check(logger, lastOut != null && (lastOut as String).equals("Breathe out"), "out lasts 6 s");
+    ok = ok && check(logger, nextIn != null && (nextIn as String).equals("Breathe in"), "cycle repeats every 10 s");
+    var lastShown = ColdLogic.breathCue(59);
+    ok = ok && check(logger, lastShown != null, "shown until 59 s");
+    ok = ok && check(logger, ColdLogic.breathCue(60) == null, "gone from 60 s");
+    ok = ok && check(logger, ColdLogic.breathCue(-1) == null, "nothing for negative time");
+    return ok;
+}

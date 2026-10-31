@@ -22,6 +22,9 @@ module ColdLogic {
     const VIBE_REPEAT = 3;
     const ALERT_REPEAT_SEC = 2;
     const ALERT_SHOW_SEC = 5;
+    const BREATH_SHOW_SEC = 60;
+    const BREATH_IN_SEC = 4;
+    const BREATH_CYCLE_SEC = 10;
 
     function floorDiv(a as Number, b as Number) as Number {
         var q = a / b;
@@ -116,6 +119,15 @@ module ColdLogic {
     // The Shower screen flashes "Target!" for the first few seconds after the target.
     function justReached(elapsed as Number, target as Number) as Boolean {
         return elapsed >= target && elapsed - target < ALERT_SHOW_SEC;
+    }
+
+    // Calm-breathing cue for the cold-shock phase: "Breathe in" for 4 s, "Breathe out" for 6 s,
+    // during the first 60 s of active time; null afterwards. Visual only (no vibration).
+    function breathCue(elapsed as Number) as String? {
+        if (elapsed < 0 || elapsed >= BREATH_SHOW_SEC) {
+            return null;
+        }
+        return elapsed % BREATH_CYCLE_SEC < BREATH_IN_SEC ? "Breathe in" : "Breathe out";
     }
 
     // Strongest vibration due in the seconds after `previous` up to and including `now`, so a

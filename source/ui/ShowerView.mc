@@ -31,7 +31,12 @@ class ShowerView extends WatchUi.View {
         }
         dc.setPenWidth(1);
 
-        // No target line: the ring and the countdown show it. Big number: countdown before the target, total time from the target on.
+        // Top line: a slow breathing cue for the first 60 s (cold shock), then nothing.
+        var cue = ColdLogic.breathCue(app.elapsed);
+        if (cue != null) {
+            Draw.text(dc, cue as String, h * 28 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
+        }
+        // Big number: countdown before the target, total time from the target on.
         Draw.big(dc, ColdLogic.bigText(app.elapsed, app.target), color);
         Draw.heartRate(dc, app.hrNow, h * 75 / 100, radius - (h / 40 + 2) / 2);
         Icons.startMarker(dc, "pause");

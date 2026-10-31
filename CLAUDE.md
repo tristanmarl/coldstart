@@ -22,7 +22,7 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 
 ## Architecture
 
-- `source/ColdLogic.mc`: pure logic (target clamp/step, countdown text, vibration schedule, local day index, streak and last-duration stats, crash-recovery credit, HR line). `HrTracker` (in `ColdLogic.mc`) keeps min/max/avg of valid heart-rate samples (30-250 bpm). Unit-tested in `tests/`.
+- `source/ColdLogic.mc`: pure logic (target clamp/step, countdown text, breathing cue `breathCue` (first 60 s, 4 s in / 6 s out, visual only), vibration schedule, local day index, streak and last-duration stats, crash-recovery credit, HR line). `HrTracker` (in `ColdLogic.mc`) keeps min/max/avg of valid heart-rate samples (30-250 bpm). Unit-tested in `tests/`.
 - `source/ColdStore.mc`: `Application.Storage` access (target, stats), always guarded; local UTC offset from the calendar fields.
 - `source/ShowerRecorder.mc`: wraps `ActivityRecording` (Meditation/Breathing, fallback Generic) and the single FitContributor field `target_s`; every FitContributor failure is swallowed.
 - `source/ColdStartApp.mc`: shower state machine (idle, running, review), 1 s timer, vibration, HR sampling, 800 ms START debounce, save/discard, stop-handling (saves an open shower).
