@@ -334,9 +334,8 @@ function testBreathCue(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, firstOut != null && (firstOut as String).equals("Breathe out"), "then out");
     ok = ok && check(logger, lastOut != null && (lastOut as String).equals("Breathe out"), "out lasts 6 s");
     ok = ok && check(logger, nextIn != null && (nextIn as String).equals("Breathe in"), "cycle repeats every 10 s");
-    var lastShown = ColdLogic.breathCue(59);
-    ok = ok && check(logger, lastShown != null, "shown until 59 s");
-    ok = ok && check(logger, ColdLogic.breathCue(60) == null, "gone from 60 s");
+    var later = ColdLogic.breathCue(125);
+    ok = ok && check(logger, later != null && (later as String).equals("Breathe in"), "kept for the whole session");
     ok = ok && check(logger, ColdLogic.breathCue(-1) == null, "nothing for negative time");
     return ok;
 }

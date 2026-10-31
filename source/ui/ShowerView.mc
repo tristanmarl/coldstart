@@ -31,7 +31,7 @@ class ShowerView extends WatchUi.View {
         }
         dc.setPenWidth(1);
 
-        // Top line: a slow breathing cue for the first 60 s (cold shock), then nothing.
+        // Top line: a slow breathing cue for the whole session (4 s in, 6 s out).
         var cue = ColdLogic.breathCue(app.elapsed);
         if (cue != null) {
             Draw.text(dc, cue as String, h * 28 / 100, Draw.small(dc), Graphics.COLOR_WHITE);

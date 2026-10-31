@@ -3,7 +3,7 @@
 ## 0.2.1
 - **START pauses instead of ending.** An accidental press no longer ends the session. START pauses (time freezes, the Garmin activity timer stops, no vibrations); on the Paused screen START resumes and BACK finishes to the summary. Paused time is not counted in the duration, and the 30 s pulses and the target alert continue from the active time (an already reached target does not fire again). A short vibration confirms pause and resume.
 - **Readable heart rate:** a large white number with a small heart icon replaces the "HR 71" text ("--" when there is none).
-- **Breathing cue:** for the first 60 s of a session the top line shows "Breathe in" (4 s) and "Breathe out" (6 s) to help through the cold-shock gasp. Visual only, no vibration.
+- **Breathing cue:** throughout a session the top line shows "Breathe in" (4 s) and "Breathe out" (6 s) to help through the cold-shock gasp. Visual only, no vibration.
 - **Simpler session screen:** the big time and the heart rate, no target line. Before the target the big number counts down; from the target on it shows the total time. It stays blue throughout (green for 5 s at the target).
 - Home: the three-dot marker next to the LIGHT button is gone; "Hold UP to switch" is written on Home instead.
 
