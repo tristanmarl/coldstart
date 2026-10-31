@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+- **START pauses instead of ending.** An accidental press no longer ends the session. START pauses (time freezes, the Garmin activity timer stops, no vibrations); on the Paused screen START resumes and BACK finishes to the summary. Paused time is not counted in the duration, and the 30 s pulses and the target alert continue from the active time (an already reached target does not fire again). A short vibration confirms pause and resume.
+- **Readable heart rate:** a large white number with a small heart icon replaces the "HR 71" text ("--" when there is none).
+- **Target always visible:** the top line shows "Target 2:00" before and after the target. After the target the big number is the total time (orange); before it, the countdown.
+- Home: the three-dot marker next to the LIGHT button is gone; "Hold UP to switch" is written on Home instead.
+
 ## 0.2.0
 - **Cold plunges.** ColdStart now has two session types, Cold Shower and Cold Plunge. Hold UP on Home to switch; the choice is remembered, shown at the top of Home, and becomes the name of the Garmin activity. The streak and "Last" count both types together.
 - Wording is neutral for both ("Discard session?", "No sessions yet"). Hold UP does nothing during a session or on the summary, and the summary no longer opens the discard prompt from the menu key (BACK does).

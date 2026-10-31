@@ -23,6 +23,14 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 - [ ] **PENDING** (0.1.3) Target alert: 1 s full-strength vibration, repeat 2 s later with a tone on watches with a beeper (tone moved off the first vibration in 0.1.3), green "Target!" screen for 5 s; 30 s pulses (300 ms, full strength) are felt in the shower; also with the target off the 30 s grid (e.g. 2:15). Check with Do Not Disturb on and off (DND can suppress app vibrations).
 - [ ] **PENDING** (0.1.3) Summary heart-rate columns (MIN / AVG / MAX, "HR bpm") are readable and clear of the START/BACK markers on the FR965; simulator screenshots on fr965 and fr255s are in `docs/screenshots/`.
 
+## 0.2.1 (pause, readable HR, target line)
+
+- [x] Simulator (fr965, harness timer driving the app, 2026-10-31): start, pause at 3 s, resume, pause at 7 s active, finish: the summary showed 0:07 after 13 s of wall time (events logged P3 R3 P7 F7), so paused time is excluded. Screenshots of Shower before and after the target and of Paused on fr965 and fr255s are in `docs/screenshots/`.
+- [ ] **NOT DONE** Clicking the drawn buttons through pause, resume, pause and BACK on the fr965 simulator could not be completed: other windows covered the simulator and the injected clicks did not reach it.
+- [ ] **PENDING** (FR965) Heart rate is legible on a wet watch in the shower (large white number, heart icon).
+- [ ] **PENDING** (FR965) START pauses, the Garmin activity timer is paused (check the saved activity's elapsed time and Connect), START resumes with the time continuing, BACK on Paused goes to the summary; a target already reached does not buzz again after a resume; pause and resume give one short vibration; no vibrations while paused.
+- [ ] **PENDING** (FR965) The total time after the target and the "Target m:ss" line are readable; the "Hold UP to switch" text on Home is clear and the LIGHT button no longer looks like it has a function.
+
 ## Cold plunge (0.2.0)
 
 - [x] Simulator (fr965, 2026-10-31, injected mouse events on the drawn UP button): a short UP changes the target exactly once; a 1.5 s hold toggles Cold Shower / Cold Plunge without changing the target; the type is remembered after relaunch; hold UP during a session and on the summary does nothing. The simulator reports a hold as a `KEY_UP` action at release after the press time, not as `KEY_MENU`, so the timing path is what was exercised.

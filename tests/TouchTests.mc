@@ -20,6 +20,7 @@ function testTouchChangesNothing(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, touchConsumed(new HomeDelegate(new HomeView())), "home delegate");
     ok = ok && check(logger, touchConsumed(new ShowerDelegate()), "shower delegate");
     ok = ok && check(logger, touchConsumed(new SummaryDelegate()), "summary delegate");
+    ok = ok && check(logger, touchConsumed(new PausedDelegate()), "paused delegate");
     var view = new ConfirmView(false);
     ok = ok && check(logger, touchConsumed(new ConfirmDelegate(view)), "confirm delegate");
     ok = ok && check(logger, app.target == targetBefore, "target unchanged by touch");

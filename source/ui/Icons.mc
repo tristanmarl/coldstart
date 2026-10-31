@@ -10,7 +10,6 @@ module Icons {
     const ANGLE_BACK = 335;
     const ANGLE_UP = 180;
     const ANGLE_DOWN = 210;
-    const ANGLE_HOLD = 153;  // hold UP; just above the UP marker
 
     function unit(dc as Dc) as Number {
         return dc.getFontHeight(Graphics.FONT_XTINY) / 4;
@@ -42,6 +41,12 @@ module Icons {
         dc.fillRectangle(x - s * 2 / 3, y - s * 2 / 3, s * 4 / 3, s * 4 / 3);
     }
 
+    function pause(dc as Dc, x as Number, y as Number, s as Number, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_BLACK);
+        dc.fillRectangle(x - s * 2 / 3, y - s * 2 / 3, s / 2 + 1, s * 4 / 3);
+        dc.fillRectangle(x + s / 6, y - s * 2 / 3, s / 2 + 1, s * 4 / 3);
+    }
+
     // dir 0 = up, 1 = down.
     function chevron(dc as Dc, x as Number, y as Number, s as Number, dir as Number, color as Number) as Void {
         dc.setColor(color, Graphics.COLOR_BLACK);
@@ -67,6 +72,8 @@ module Icons {
             play(dc, x, y, s, Graphics.COLOR_GREEN);
         } else if (kind.equals("stop")) {
             stop(dc, x, y, s, Graphics.COLOR_GREEN);
+        } else if (kind.equals("pause")) {
+            pause(dc, x, y, s, Graphics.COLOR_GREEN);
         } else if (kind.equals("check")) {
             check(dc, x, y, s, Graphics.COLOR_GREEN);
         } else if (kind.equals("cross")) {
@@ -76,20 +83,6 @@ module Icons {
         } else {
             chevron(dc, x, y, s, 1, Graphics.COLOR_WHITE);
         }
-        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-    }
-
-    // Three dots near UP: hold UP for the session type.
-    function holdMarker(dc as Dc) as Void {
-        var s = unit(dc);
-        var radius = (dc.getWidth() < dc.getHeight() ? dc.getWidth() : dc.getHeight()) / 2 - s * 2;
-        var radians = ANGLE_HOLD * Math.PI / 180.0;
-        var x = dc.getWidth() / 2 + (radius * Math.cos(radians)).toNumber();
-        var y = dc.getHeight() / 2 - (radius * Math.sin(radians)).toNumber();
-        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
-        dc.fillCircle(x - s, y, s / 3 + 1);
-        dc.fillCircle(x, y, s / 3 + 1);
-        dc.fillCircle(x + s, y, s / 3 + 1);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
     }
 

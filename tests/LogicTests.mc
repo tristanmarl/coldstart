@@ -270,3 +270,54 @@ function testLongPressDecision(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, !ColdLogic.isLongPress(-1, 5000), "unseen press start is not a hold");
     return ok;
 }
+
+(:test)
+function testActiveTimeAcrossPauses(logger as Test.Logger) as Boolean {
+    // Run 1000..4000 ms (3 s), pause, run 9000..12000 ms (3 s), pause, run 20000..20500 ms.
+    var acc = 0;
+    var ok = check(logger, ColdLogic.activeSec(acc, 1000, 4000, true) == 3, "first run counts while running");
+    acc = ColdLogic.activeMs(acc, 1000, 4000, true);
+    ok = ok && check(logger, ColdLogic.activeSec(acc, 1000, 9000, false) == 3, "frozen while paused");
+    ok = ok && check(logger, ColdLogic.activeSec(acc, 9000, 12000, true) == 6, "resume continues from the frozen time");
+    acc = ColdLogic.activeMs(acc, 9000, 12000, true);
+    ok = ok && check(logger, acc == 6000, "two runs accumulate");
+    ok = ok && check(logger, ColdLogic.activeSec(acc, 20000, 20500, true) == 6, "half a second more is still 6 s");
+    ok = ok && check(logger, ColdLogic.activeSec(acc, 20000, 21000, true) == 7, "and 7 s a second later");
+    ok = ok && check(logger, ColdLogic.activeSec(0, 5000, 4000, true) == 0, "negative run is clamped");
+    return ok;
+}
+
+(:test)
+function testActiveTimeTimerWrap(logger as Test.Logger) as Boolean {
+    // System.getTimer() wraps like int32; the difference of the two readings stays right.
+    var start = 2147483000;
+    var later = start + 1500;
+    var ok = check(logger, ColdLogic.runMs(start, later) == 1500, "run across the wrap point");
+    ok = ok && check(logger, ColdLogic.activeSec(2000, start, later, true) == 3, "accumulated plus wrapped run");
+    return ok;
+}
+
+(:test)
+function testShowerScreenTexts(logger as Test.Logger) as Boolean {
+    var ok = check(logger, ColdLogic.bigText(0, 120).equals("2:00"), "countdown at the start");
+    ok = ok && check(logger, ColdLogic.bigText(119, 120).equals("0:01"), "countdown before the target");
+    ok = ok && check(logger, ColdLogic.bigText(120, 120).equals("2:00"), "total at the target");
+    ok = ok && check(logger, ColdLogic.bigText(150, 120).equals("2:30"), "total time after the target");
+    ok = ok && check(logger, !ColdLogic.targetReached(119, 120) && ColdLogic.targetReached(120, 120), "reached from the target on");
+    return ok;
+}
+
+(:test)
+function testAlertsContinueAfterPause(logger as Test.Logger) as Boolean {
+    // Active time simply continues: a reached target does not fire again, a pending one still does.
+    var after = ColdLogic.alertStep(121, 122, 120, 0);
+    var ok = check(logger, after[0] == ColdLogic.VIBE_NONE, "no second target alert after a resume");
+    var before = ColdLogic.alertStep(100, 101, 120, 0);
+    ok = ok && check(logger, before[0] == ColdLogic.VIBE_NONE, "nothing yet before the target");
+    var hit = ColdLogic.alertStep(119, 120, 120, 0);
+    ok = ok && check(logger, hit[0] == ColdLogic.VIBE_TARGET, "target alert still fires after a pause");
+    // A pause between the target and its repeat clears the pending repeat (pauseShower resets it).
+    var cleared = ColdLogic.alertStep(121, 122, 120, 0);
+    ok = ok && check(logger, cleared[0] != ColdLogic.VIBE_REPEAT, "no repeat after a pause");
+    return ok;
+}

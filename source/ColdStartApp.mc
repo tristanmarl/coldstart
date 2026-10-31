@@ -13,13 +13,15 @@ class ColdStartApp extends Application.AppBase {
     public const STATE_IDLE = 0;
     public const STATE_RUNNING = 1;
     public const STATE_REVIEW = 2;
+    public const STATE_PAUSED = 3;
 
     private var _state as Number = 0;
     private var _recorder as ShowerRecorder;
     private var _timer as Timer.Timer;
     private var _timerStarted as Boolean = false;
     private var _startedAt as Number = 0;
-    private var _startMs as Number = 0;
+    private var _runStartMs as Number = 0;
+    private var _activeMs as Number = 0;
     private var _dayIndex as Number = 0;
     private var _lastStartPressAt as Number = -10000;
     private var _tickCount as Number = 0;
@@ -54,8 +56,10 @@ class ColdStartApp extends Application.AppBase {
     public function onStop(state as Dictionary?) as Void {
         stopTimer();
         if (_state == STATE_RUNNING) {
-            elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
+            elapsed = currentElapsed();
             _recorder.stop();
+            _state = STATE_REVIEW;
+        } else if (_state == STATE_PAUSED) {
             _state = STATE_REVIEW;
         }
         if (_state == STATE_REVIEW) {
@@ -140,7 +144,8 @@ class ColdStartApp extends Application.AppBase {
         }
         var now = Time.now();
         _startedAt = now.value();
-        _startMs = System.getTimer();
+        _runStartMs = System.getTimer();
+        _activeMs = 0;
         _dayIndex = ColdLogic.dayIndex(_startedAt, ColdStore.localOffset(now));
         elapsed = 0;
         lastVibe = 0;
@@ -157,14 +162,61 @@ class ColdStartApp extends Application.AppBase {
         return true;
     }
 
-    public function stopShower() as Void {
+    // Active (not paused) seconds of the session.
+    private function currentElapsed() as Number {
+        return ColdLogic.activeSec(_activeMs, _runStartMs, System.getTimer(), _state == STATE_RUNNING);
+    }
+
+    // START during a session pauses it (an accidental press can be undone): the 1 s counting stops,
+    // the Garmin activity is stopped but stays open, and the frozen active time is kept.
+    public function pauseShower() as Boolean {
         if (_state != STATE_RUNNING) {
-            return;
+            return false;
         }
         stopTimer();
-        elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
+        _activeMs = ColdLogic.activeMs(_activeMs, _runStartMs, System.getTimer(), true);
+        elapsed = _activeMs / 1000;
+        _alertRepeatAt = 0;
         _recorder.stop();
+        _state = STATE_PAUSED;
+        feedback();
+        return true;
+    }
+
+    // Resumes recording and counting; the target alert and pulses continue from the active time.
+    public function resumeShower() as Boolean {
+        if (_state != STATE_PAUSED) {
+            return false;
+        }
+        if (!_recorder.resume()) {
+            notice = "Can't resume";
+            return false;
+        }
+        _runStartMs = System.getTimer();
+        _state = STATE_RUNNING;
+        _timer.start(method(:onTick), 1000, true);
+        _timerStarted = true;
+        keepScreenOn();
+        feedback();
+        return true;
+    }
+
+    // BACK on the Paused screen: finish and review.
+    public function finishShower() as Void {
+        if (_state != STATE_PAUSED) {
+            return;
+        }
         _state = STATE_REVIEW;
+    }
+
+    // Short single vibration confirming a pause or resume (never inside the 1 s tick).
+    private function feedback() as Void {
+        try {
+            if (Attention has :vibrate) {
+                Attention.vibrate([new Attention.VibeProfile(100, 200)]);
+            }
+        } catch (error) {
+        }
     }
 
     // Saves the FIT session and updates the stats. Returns false (staying in review) on failure.
@@ -220,7 +272,7 @@ class ColdStartApp extends Application.AppBase {
             return;
         }
         var previous = elapsed;
-        elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
+        elapsed = currentElapsed();
         _tickCount++;
         var step = ColdLogic.alertStep(previous, elapsed, target, _alertRepeatAt);
         var vibe = step[0];

@@ -58,4 +58,31 @@ module Draw {
     function big(dc as Graphics.Dc, str as String, color as Number) as Void {
         text(dc, str, dc.getHeight() / 2, bigFont(dc, str), color);
     }
+
+    // Filled heart from two circles and a triangle; r is the circle radius.
+    function heart(dc as Graphics.Dc, cx as Number, cy as Number, r as Number, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(cx - r, cy - r / 2, r);
+        dc.fillCircle(cx + r, cy - r / 2, r);
+        dc.fillPolygon([[cx - r * 2, cy - r / 4], [cx + r * 2, cy - r / 4], [cx, cy + r * 5 / 2]]);
+    }
+
+    // Heart-rate readout: heart icon left of a large number ("--" when none), centred at y.
+    function heartRate(dc as Graphics.Dc, hr as Number, y as Number) as Void {
+        var h = dc.getHeight();
+        var str = hr > 0 ? hr.toString() : "--";
+        var font = Graphics.FONT_NUMBER_MEDIUM;
+        if (hr <= 0) {
+            font = Graphics.FONT_LARGE;
+        }
+        var r = h / 40 + 1;
+        var tw = dc.getTextWidthInPixels(str, font);
+        var gap = r;
+        var total = r * 4 + gap + tw;
+        var left = dc.getWidth() / 2 - total / 2;
+        heart(dc, left + r * 2, y, r, 0xFF3355);
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(left + r * 4 + gap, y, font, str,
+            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
 }

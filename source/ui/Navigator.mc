@@ -11,6 +11,10 @@ module Navigator {
         WatchUi.switchToView(new ShowerView(), new ShowerDelegate(), WatchUi.SLIDE_UP);
     }
 
+    function paused() as Void {
+        WatchUi.switchToView(new PausedView(), new PausedDelegate(), WatchUi.SLIDE_IMMEDIATE);
+    }
+
     function summary() as Void {
         WatchUi.switchToView(new SummaryView(), new SummaryDelegate(), WatchUi.SLIDE_UP);
     }

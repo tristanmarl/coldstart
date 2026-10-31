@@ -180,6 +180,34 @@ module ColdLogic {
         return downAt >= 0 && nowMs - downAt >= LONG_PRESS_MS;
     }
 
+    // --- Active time (pause/resume) ----------------------------------------------------------------
+    // Active time = accumulated ms of finished runs + the current run (System.getTimer() ms, which
+    // wraps like int32; the difference of two readings is still right). Paused time is never counted.
+
+    function runMs(runStartMs as Number, nowMs as Number) as Number {
+        var delta = nowMs - runStartMs;
+        return delta < 0 ? 0 : delta;
+    }
+
+    function activeMs(accMs as Number, runStartMs as Number, nowMs as Number, running as Boolean) as Number {
+        return running ? accMs + runMs(runStartMs, nowMs) : accMs;
+    }
+
+    function activeSec(accMs as Number, runStartMs as Number, nowMs as Number, running as Boolean) as Number {
+        return activeMs(accMs, runStartMs, nowMs, running) / 1000;
+    }
+
+    // --- Shower screen text ---------------------------------------------------------------------
+
+    // Before the target the big number counts down; from the target on it shows the total time.
+    function targetReached(elapsed as Number, target as Number) as Boolean {
+        return elapsed >= target;
+    }
+
+    function bigText(elapsed as Number, target as Number) as String {
+        return targetReached(elapsed, target) ? formatClock(elapsed) : formatClock(target - elapsed);
+    }
+
     // --- Elapsed time and crash recovery ----------------------------------------------------------
 
     // Whole seconds between two System.getTimer() readings (ms, monotonic, wraps like int32);

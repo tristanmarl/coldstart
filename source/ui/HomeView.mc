@@ -24,9 +24,10 @@ class HomeView extends WatchUi.View {
         var notice = app.notice;
         if (notice != null) {
             Draw.text(dc, notice as String, h * 80 / 100, Draw.tiny(dc), Draw.OVER);
+        } else {
+            Draw.text(dc, "Hold UP to switch", h * 80 / 100, Graphics.FONT_XTINY, Draw.DIM);
         }
         Icons.browseMarkers(dc);
-        Icons.holdMarker(dc);
         Icons.startMarker(dc, "play");
     }
 }

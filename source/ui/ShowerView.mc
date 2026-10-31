@@ -12,9 +12,8 @@ class ShowerView extends WatchUi.View {
         var app = getApp();
         var h = dc.getHeight();
         var w = dc.getWidth();
-        var over = ColdLogic.isOvertime(app.elapsed, app.target);
         var reached = ColdLogic.justReached(app.elapsed, app.target);
-        var color = reached ? Draw.DONE : (over ? Draw.OVER : Draw.COLD);
+        var color = reached ? Draw.DONE : (ColdLogic.isOvertime(app.elapsed, app.target) ? Draw.OVER : Draw.COLD);
 
         // Progress arc inside the button-hint ring: clockwise from 12 o'clock, full once the
         // target is reached.
@@ -32,16 +31,55 @@ class ShowerView extends WatchUi.View {
         }
         dc.setPenWidth(1);
 
-        if (reached) {
-            Draw.text(dc, "Target!", h * 28 / 100, Draw.small(dc), Draw.DONE);
-        } else {
-            Draw.text(dc, over ? "Overtime" : "Target " + ColdLogic.formatClock(app.target),
-                h * 28 / 100, Draw.small(dc), Draw.DIM);
+        // Top line: the target, always visible (green for 5 s after reaching it).
+        Draw.text(dc, "Target " + ColdLogic.formatClock(app.target), h * 28 / 100, Draw.small(dc),
+            reached ? Draw.DONE : Draw.DIM);
+        // Big number: countdown before the target, total time from the target on.
+        Draw.big(dc, ColdLogic.bigText(app.elapsed, app.target), color);
+        Draw.heartRate(dc, app.hrNow, h * 79 / 100);
+        Icons.startMarker(dc, "pause");
+    }
+}
+
+// Paused: frozen total time, START resumes, BACK finishes.
+class PausedView extends WatchUi.View {
+    public function initialize() {
+        View.initialize();
+    }
+
+    public function onUpdate(dc as Dc) as Void {
+        Draw.clear(dc);
+        var app = getApp();
+        var h = dc.getHeight();
+        Draw.text(dc, "Paused", h * 28 / 100, Draw.small(dc), Draw.OVER);
+        Draw.big(dc, ColdLogic.formatClock(app.elapsed), Graphics.COLOR_WHITE);
+        Draw.text(dc, "Target " + ColdLogic.formatClock(app.target), h * 68 / 100, Draw.small(dc),
+            Draw.DIM);
+        Icons.startMarker(dc, "play");
+        Icons.backMarker(dc, "stop");
+    }
+}
+
+class PausedDelegate extends KeyDelegate {
+    public function initialize() {
+        KeyDelegate.initialize();
+    }
+
+    public function onStartKey() as Boolean {
+        var app = getApp();
+        if (!app.acceptStart()) {
+            return true;
         }
-        Draw.big(dc, ColdLogic.countdownText(app.elapsed, app.target), color);
-        var hr = app.hrNow > 0 ? "HR " + app.hrNow.toString() : "HR --";
-        Draw.text(dc, hr, h * 70 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
-        Icons.startMarker(dc, "stop");
+        if (app.resumeShower()) {
+            Navigator.shower();
+        }
+        return true;
+    }
+
+    public function onBackKey() as Boolean {
+        getApp().finishShower();
+        Navigator.summary();
+        return true;
     }
 }
 
@@ -55,8 +93,9 @@ class ShowerDelegate extends KeyDelegate {
         if (!app.acceptStart()) {
             return true;
         }
-        app.stopShower();
-        Navigator.summary();
+        if (app.pauseShower()) {
+            Navigator.paused();
+        }
         return true;
     }
 

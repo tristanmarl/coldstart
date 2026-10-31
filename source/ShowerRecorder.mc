@@ -87,6 +87,19 @@ class ShowerRecorder {
         }
     }
 
+    // Resumes recording after a pause (the session stays open while stopped).
+    public function resume() as Boolean {
+        if (_session == null) {
+            return false;
+        }
+        try {
+            var session = _session as ActivityRecording.Session;
+            return session.isRecording() || session.start();
+        } catch (error) {
+            return false;
+        }
+    }
+
     public function save() as Boolean {
         if (_session == null) {
             return false;
