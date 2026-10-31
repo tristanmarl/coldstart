@@ -31,10 +31,7 @@ class ShowerView extends WatchUi.View {
         }
         dc.setPenWidth(1);
 
-        // Top line: the target, always visible (green for 5 s after reaching it).
-        Draw.text(dc, "Target " + ColdLogic.formatClock(app.target), h * 28 / 100, Draw.small(dc),
-            reached ? Draw.DONE : Draw.DIM);
-        // Big number: countdown before the target, total time from the target on.
+        // No target line: the ring and the countdown show it. Big number: countdown before the target, total time from the target on.
         Draw.big(dc, ColdLogic.bigText(app.elapsed, app.target), color);
         Draw.heartRate(dc, app.hrNow, h * 79 / 100);
         Icons.startMarker(dc, "pause");
