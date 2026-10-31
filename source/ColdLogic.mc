@@ -12,6 +12,10 @@ module ColdLogic {
     const HR_MIN = 30;
     const HR_MAX = 250;
 
+    const TYPE_SHOWER = 0;
+    const TYPE_PLUNGE = 1;
+    const LONG_PRESS_MS = 700;
+
     const VIBE_NONE = 0;
     const VIBE_PULSE = 1;
     const VIBE_TARGET = 2;
@@ -149,6 +153,31 @@ module ColdLogic {
             return null;
         }
         return [min.toString(), avg.toString(), max.toString()] as Array<String>;
+    }
+
+    // --- Session type ---------------------------------------------------------------------------
+
+    // Anything but a known type (garbage in storage) becomes the default, Cold Shower.
+    function validType(value as Object?) as Number {
+        if (value instanceof Number && (value as Number) == TYPE_PLUNGE) {
+            return TYPE_PLUNGE;
+        }
+        return TYPE_SHOWER;
+    }
+
+    function toggleType(type as Number) as Number {
+        return type == TYPE_PLUNGE ? TYPE_SHOWER : TYPE_PLUNGE;
+    }
+
+    // Also the name of the Garmin activity (fixed when the session is created).
+    function typeName(type as Number) as String {
+        return type == TYPE_PLUNGE ? "Cold Plunge" : "Cold Shower";
+    }
+
+    // A press of at least LONG_PRESS_MS (System.getTimer() ms) counts as a hold; downAt < 0 means
+    // the press start was not seen.
+    function isLongPress(downAt as Number, nowMs as Number) as Boolean {
+        return downAt >= 0 && nowMs - downAt >= LONG_PRESS_MS;
     }
 
     // --- Elapsed time and crash recovery ----------------------------------------------------------

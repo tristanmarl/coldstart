@@ -28,6 +28,10 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 - `source/ColdStartApp.mc`: shower state machine (idle, running, review), 1 s timer, vibration, HR sampling, 800 ms START debounce, save/discard, stop-handling (saves an open shower).
 - `source/ui/`: views and delegates. Every delegate extends `KeyDelegate`, which consumes all touch callbacks. No `Menu2`, confirmation or picker is used (they accept taps); the discard choice is the key-only `ConfirmView`. `Icons.mc` draws button hints at the edge (angles from the fr965 layout, one place). `Draw.mc` has text helpers and the big-number font choice.
 
+## Session type and hold UP
+
+Two session types (`ColdLogic.TYPE_SHOWER` / `TYPE_PLUNGE`, storage key `type`, validated by `ColdLogic.validType`, default Cold Shower). `ColdLogic.typeName` is the Garmin activity name, passed to `ShowerRecorder.start` and fixed for the session. Hold UP on Home (`HomeDelegate.onMenuKey`) toggles it. How a hold arrives: `KeyDelegate.onKeyPressed` records the UP press time; a hold is either `KEY_MENU` (what the five-button firmware is expected to send) or, as in the simulator, a `KEY_UP` action whose press lasted `ColdLogic.LONG_PRESS_MS` (700 ms). Both call `onMenuKey` once, a `KEY_UP` release within 1.5 s of a `KEY_MENU` is swallowed, and a short UP acts on release only (the simulator reports the action at release). Shower, Summary and Confirm leave `onMenuKey` as a no-op.
+
 ## Icon
 
 `resources/icon/coldstart.svg` is the source. Render with `qlmanage -t -s 500 -o <dir> resources/icon/coldstart.svg` and `sips -z 65 65` / `sips -z 40 40`: `resources/drawables/launcher.png` (65 px), `resources-launcher40/drawables/launcher.png` (40 px, used by the 40 px launcher devices through per-product `resourcePath` lines in `monkey.jungle`), `docs/store/icon-500.png` (store). The `Sensor` permission is kept only for the `Sensor.getInfo()` heart-rate fallback.

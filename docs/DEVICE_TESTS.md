@@ -23,6 +23,13 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 - [ ] **PENDING** (0.1.3) Target alert: 1 s full-strength vibration, repeat 2 s later with a tone on watches with a beeper (tone moved off the first vibration in 0.1.3), green "Target!" screen for 5 s; 30 s pulses (300 ms, full strength) are felt in the shower; also with the target off the 30 s grid (e.g. 2:15). Check with Do Not Disturb on and off (DND can suppress app vibrations).
 - [ ] **PENDING** (0.1.3) Summary heart-rate columns (MIN / AVG / MAX, "HR bpm") are readable and clear of the START/BACK markers on the FR965; simulator screenshots on fr965 and fr255s are in `docs/screenshots/`.
 
+## Cold plunge (0.2.0)
+
+- [x] Simulator (fr965, 2026-10-31, injected mouse events on the drawn UP button): a short UP changes the target exactly once; a 1.5 s hold toggles Cold Shower / Cold Plunge without changing the target; the type is remembered after relaunch; hold UP during a session and on the summary does nothing. The simulator reports a hold as a `KEY_UP` action at release after the press time, not as `KEY_MENU`, so the timing path is what was exercised.
+- [ ] **PENDING** (FR965) Hold UP toggles the type on the watch (as `KEY_MENU` or as a long UP press), exactly once, without also changing the target; a short UP still changes the target once; the three-dot marker sits next to UP.
+- [ ] **PENDING** (FR965) Garmin Connect shows the activity name "Cold Plunge" for a plunge and "Cold Shower" for a shower.
+- [ ] **PENDING** Heart rate in a cold plunge: optical HR may be patchy underwater; the summary hides the HR columns when nothing valid was measured.
+
 ## Pending physical-watch checks (FR965)
 
 - [ ] **PENDING** (0.1.1) Crash recovery: kill the app (or pull the battery path via a forced restart) during a shower of 30 s or more; on the next launch Home shows "Recovered m:ss", the streak day and "Last" are credited from the checkpoint, and no FIT activity exists for it. A kill within the first 10 s credits nothing.

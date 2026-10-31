@@ -28,6 +28,7 @@ class ColdStartApp extends Application.AppBase {
     private var _hr as HrTracker = new HrTracker();
 
     public var target as Number = ColdLogic.TARGET_DEFAULT;
+    public var sessionType as Number = ColdLogic.TYPE_SHOWER;
     public var stats as Dictionary = ColdLogic.emptyStats();
     public var elapsed as Number = 0;
     public var lastVibe as Number = 0;
@@ -44,6 +45,7 @@ class ColdStartApp extends Application.AppBase {
     public function onStart(state as Dictionary?) as Void {
         AppBase.onStart(state);
         target = ColdStore.loadTarget();
+        sessionType = ColdStore.loadType();
         stats = ColdStore.loadStats();
         recoverOpenShower();
     }
@@ -117,12 +119,22 @@ class ColdStartApp extends Application.AppBase {
         notice = null;
     }
 
+    // Hold UP on Home: the type is fixed for a session once it has started.
+    public function toggleType() as Void {
+        if (_state != STATE_IDLE) {
+            return;
+        }
+        sessionType = ColdLogic.toggleType(sessionType);
+        ColdStore.saveType(sessionType);
+        notice = null;
+    }
+
     public function startShower() as Boolean {
         if (_state != STATE_IDLE) {
             return false;
         }
         notice = null;
-        if (!_recorder.start(target)) {
+        if (!_recorder.start(target, ColdLogic.typeName(sessionType))) {
             notice = "Can't record";
             return false;
         }

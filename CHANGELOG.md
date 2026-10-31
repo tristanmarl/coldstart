@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+- **Cold plunges.** ColdStart now has two session types, Cold Shower and Cold Plunge. Hold UP on Home to switch; the choice is remembered, shown at the top of Home, and becomes the name of the Garmin activity. The streak and "Last" count both types together.
+- Wording is neutral for both ("Discard session?", "No sessions yet"). Hold UP does nothing during a session or on the summary, and the summary no longer opens the discard prompt from the menu key (BACK does).
+- README notes that optical heart rate is unreliable under water.
+
 ## 0.1.3
 - **Target alert reworked.** The target now gives a single 1 s vibration at full strength, then a second 1 s vibration 2 s later. The tone plays with the second one, so it can't cut the first short. 0.1.2's three-part pattern with pauses gave no vibration on a Forerunner 965.
 - **Stronger 30 s pulses:** 300 ms at full strength (was 200 ms at 60 %).

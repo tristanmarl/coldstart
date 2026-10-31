@@ -14,17 +14,19 @@ class HomeView extends WatchUi.View {
         var stats = app.stats;
         var today = ColdStore.today();
 
+        Draw.text(dc, ColdLogic.typeName(app.sessionType), h * 17 / 100, Draw.tiny(dc), Draw.COLD);
         Draw.text(dc, "Streak " + ColdLogic.currentStreak(stats, today).toString() + " d",
             h * 28 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
         Draw.big(dc, ColdLogic.formatClock(app.target), Draw.COLD);
         var lastSec = stats["lastSec"] as Number;
-        Draw.text(dc, lastSec > 0 ? "Last " + ColdLogic.formatClock(lastSec) : "No showers yet",
+        Draw.text(dc, lastSec > 0 ? "Last " + ColdLogic.formatClock(lastSec) : "No sessions yet",
             h * 70 / 100, Draw.small(dc), lastSec > 0 ? Graphics.COLOR_WHITE : Draw.DIM);
         var notice = app.notice;
         if (notice != null) {
             Draw.text(dc, notice as String, h * 80 / 100, Draw.tiny(dc), Draw.OVER);
         }
         Icons.browseMarkers(dc);
+        Icons.holdMarker(dc);
         Icons.startMarker(dc, "play");
     }
 }
@@ -42,6 +44,13 @@ class HomeDelegate extends KeyDelegate {
 
     public function onDownKey() as Boolean {
         getApp().adjustTarget(-1);
+        WatchUi.requestUpdate();
+        return true;
+    }
+
+    // Hold UP toggles Cold Shower / Cold Plunge (see KeyDelegate for how a hold arrives).
+    public function onMenuKey() as Boolean {
+        getApp().toggleType();
         WatchUi.requestUpdate();
         return true;
     }

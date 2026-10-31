@@ -9,6 +9,7 @@ module ColdStore {
     const KEY_TARGET = "target";
     const KEY_STATS = "stats";
     const KEY_OPEN = "open";
+    const KEY_TYPE = "type";
 
     function loadTarget() as Number {
         try {
@@ -24,6 +25,21 @@ module ColdStore {
     function saveTarget(sec as Number) as Void {
         try {
             Application.Storage.setValue(KEY_TARGET, sec);
+        } catch (error) {
+        }
+    }
+
+    function loadType() as Number {
+        try {
+            return ColdLogic.validType(Application.Storage.getValue(KEY_TYPE) as Object?);
+        } catch (error) {
+            return ColdLogic.TYPE_SHOWER;
+        }
+    }
+
+    function saveType(type as Number) as Void {
+        try {
+            Application.Storage.setValue(KEY_TYPE, type);
         } catch (error) {
         }
     }

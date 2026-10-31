@@ -1,4 +1,5 @@
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.WatchUi;
 
 // Base of every delegate. Actions come ONLY from physical key events (onKey -> onXxxKey).
@@ -8,8 +9,22 @@ import Toybox.WatchUi;
 // reach onKey, so behaviours cannot be used. With an InputDelegate a tap reaches only onTap.
 // Subclasses override the onXxxKey methods only.
 class KeyDelegate extends WatchUi.InputDelegate {
+    // Hold UP. On five-button watches the firmware may report a hold as KEY_MENU; the simulator
+    // only reports the release (onKey ACTION) after the press time. So a hold is either KEY_MENU,
+    // or a KEY_UP action whose press lasted LONG_PRESS_MS: both call onMenuKey exactly once (a
+    // KEY_UP release right after a KEY_MENU is swallowed). A short UP acts on release only.
+    private var _upDownAt as Number = -1;
+    private var _menuAt as Number = -10000;
+
     public function initialize() {
         InputDelegate.initialize();
+    }
+
+    public function onKeyPressed(keyEvent as WatchUi.KeyEvent) as Boolean {
+        if (keyEvent.getKey() == WatchUi.KEY_UP) {
+            _upDownAt = System.getTimer();
+        }
+        return false;
     }
 
     // --- Physical keys ------------------------------------------------------------------------
@@ -26,6 +41,20 @@ class KeyDelegate extends WatchUi.InputDelegate {
         }
         if (type == WatchUi.PRESS_TYPE_DOWN || type == WatchUi.PRESS_TYPE_UP) {
             return true;
+        }
+        var now = System.getTimer();
+        if (key == WatchUi.KEY_UP) {
+            var downAt = _upDownAt;
+            _upDownAt = -1;
+            if (now - _menuAt < 1500) {
+                return true;
+            }
+            if (ColdLogic.isLongPress(downAt, now)) {
+                _menuAt = now;
+                return onMenuKey();
+            }
+        } else if (key == WatchUi.KEY_MENU) {
+            _menuAt = now;
         }
         if (key == WatchUi.KEY_ENTER) {
             return onStartKey();

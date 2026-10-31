@@ -245,3 +245,28 @@ function testCheckpointAndRecoveryCredit(logger as Test.Logger) as Boolean {
     ok = ok && check(logger, ColdLogic.openCredit("open" as Object?) == null, "not an array");
     return ok;
 }
+
+(:test)
+function testSessionType(logger as Test.Logger) as Boolean {
+    var ok = check(logger, ColdLogic.toggleType(ColdLogic.TYPE_SHOWER) == ColdLogic.TYPE_PLUNGE, "shower to plunge");
+    ok = ok && check(logger, ColdLogic.toggleType(ColdLogic.TYPE_PLUNGE) == ColdLogic.TYPE_SHOWER, "plunge to shower");
+    ok = ok && check(logger, ColdLogic.validType(1 as Object?) == ColdLogic.TYPE_PLUNGE, "stored plunge");
+    ok = ok && check(logger, ColdLogic.validType(0 as Object?) == ColdLogic.TYPE_SHOWER, "stored shower");
+    ok = ok && check(logger, ColdLogic.validType(null) == ColdLogic.TYPE_SHOWER, "null gives the default");
+    ok = ok && check(logger, ColdLogic.validType(7 as Object?) == ColdLogic.TYPE_SHOWER, "unknown number gives the default");
+    ok = ok && check(logger, ColdLogic.validType("plunge" as Object?) == ColdLogic.TYPE_SHOWER, "string gives the default");
+    ok = ok && check(logger, ColdLogic.validType([1] as Object?) == ColdLogic.TYPE_SHOWER, "array gives the default");
+    ok = ok && check(logger, ColdLogic.typeName(ColdLogic.TYPE_SHOWER).equals("Cold Shower"), "shower name");
+    ok = ok && check(logger, ColdLogic.typeName(ColdLogic.TYPE_PLUNGE).equals("Cold Plunge"), "plunge name");
+    return ok;
+}
+
+(:test)
+function testLongPressDecision(logger as Test.Logger) as Boolean {
+    var ok = check(logger, !ColdLogic.isLongPress(1000, 1300), "300 ms is a short press");
+    ok = ok && check(logger, !ColdLogic.isLongPress(1000, 1699), "699 ms is short");
+    ok = ok && check(logger, ColdLogic.isLongPress(1000, 1700), "700 ms is a hold");
+    ok = ok && check(logger, ColdLogic.isLongPress(1000, 2500), "1.5 s is a hold");
+    ok = ok && check(logger, !ColdLogic.isLongPress(-1, 5000), "unseen press start is not a hold");
+    return ok;
+}

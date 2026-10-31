@@ -45,6 +45,12 @@ function testOnKeyDispatch(logger as Test.Logger) as Boolean {
     var edge2 = home.onKey(upEdgeUp);
     ok = ok && check(logger, edge1 && edge2, "press edges are consumed");
     ok = ok && check(logger, app.target == 120, "press edges do not act");
+    // A hold arriving as KEY_MENU toggles nothing on the base delegate and is consumed; Summary,
+    // Shower and Confirm ignore it.
+    var menu = new WatchUi.KeyEvent(WatchUi.KEY_MENU, WatchUi.PRESS_TYPE_ACTION);
+    var menuOk = new ShowerDelegate().onKey(menu) && new SummaryDelegate().onKey(menu);
+    ok = ok && check(logger, menuOk, "hold UP is a consumed no-op in Shower and Summary");
+    ok = ok && check(logger, app.state() == app.STATE_IDLE && app.target == 120, "and changes nothing");
     var light = new WatchUi.KeyEvent(WatchUi.KEY_LIGHT, WatchUi.PRESS_TYPE_ACTION);
     ok = ok && check(logger, !home.onKey(light), "unhandled keys go to the firmware");
     var view = new ConfirmView(false);

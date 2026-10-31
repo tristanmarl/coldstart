@@ -8,13 +8,13 @@ import Toybox.Lang;
 class ShowerRecorder {
     private var _session as ActivityRecording.Session? = null;
 
-    public function start(targetSec as Number) as Boolean {
+    public function start(targetSec as Number, name as String) as Boolean {
         if (_session != null) {
             return false;
         }
-        _session = create(true);
+        _session = create(true, name);
         if (_session == null) {
-            _session = create(false);
+            _session = create(false, name);
         }
         if (_session == null) {
             return false;
@@ -33,7 +33,7 @@ class ShowerRecorder {
     }
 
     // preferred: Meditation / Breathing when the device has the constants, else Generic.
-    private function create(preferred as Boolean) as ActivityRecording.Session? {
+    private function create(preferred as Boolean, name as String) as ActivityRecording.Session? {
         try {
             var sport = Activity.SPORT_GENERIC;
             var subSport = Activity.SUB_SPORT_GENERIC;
@@ -45,7 +45,7 @@ class ShowerRecorder {
                 subSport = Activity.SUB_SPORT_BREATHING;
             }
             return ActivityRecording.createSession({
-                :name => "Cold Shower",
+                :name => name,
                 :sport => sport,
                 :subSport => subSport
             });

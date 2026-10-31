@@ -24,6 +24,8 @@ Four spaces, typed parameters and returns, `UpperCamelCase` classes, `lowerCamel
 
 Timer callbacks passed through `method(:callback)` must be public: a private one compiles but fails on the watch. Touch is disabled everywhere: every delegate extends `KeyDelegate` (an `InputDelegate`): on a `BehaviorDelegate` the firmware turns taps into `onSelect` and buttons into behaviours that never reach `onKey`, so behaviours cannot be used. Actions live only in its `onXxxKey` methods (reached from `onKey`) and the touch callbacks stay no-ops; do not use `Menu2`, confirmations or pickers in the shower flow. No storage writes in the vibration tick.
 
+Session type (Cold Shower / Cold Plunge) is toggled by hold UP on Home through `KeyDelegate.onMenuKey`; see CLAUDE.md for how a hold is detected. UI text must stay neutral ("session"), since both types share the screens.
+
 ## Commits and Pull Requests
 
 Short imperative subjects, such as `Fix target step`. Pull requests list build and test results and identify device checks that remain unverified.

@@ -59,10 +59,6 @@ class SummaryDelegate extends KeyDelegate {
         return true;
     }
 
-    public function onMenuKey() as Boolean {
-        Navigator.confirm(false);
-        return true;
-    }
 }
 
 // Key-only save/discard choice (no Menu2: menus accept taps). UP/DOWN move, START confirms,
@@ -84,7 +80,7 @@ class ConfirmView extends WatchUi.View {
     public function onUpdate(dc as Dc) as Void {
         Draw.clear(dc);
         var h = dc.getHeight();
-        Draw.text(dc, shortShower ? "Too short" : "Discard shower?", h * 22 / 100, Draw.small(dc),
+        Draw.text(dc, shortShower ? "Too short" : "Discard session?", h * 22 / 100, Draw.small(dc),
             Draw.OVER);
         var items = labels();
         for (var i = 0; i < items.size(); i++) {
