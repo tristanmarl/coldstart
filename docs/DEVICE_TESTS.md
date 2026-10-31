@@ -19,7 +19,7 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 
 ## Target vibration (user report, physical FR965)
 
-- [x] **FAILED** (0.1.2, user report) No vibration was felt when the target was reached. The schedule logic was unit-tested but the target alert used a multi-profile pattern (3 pulses with pauses) and the 30 s pulses 60 % strength.
+- [x] **FAILED** (0.1.2, user report) No vibration was felt when the target was reached. The schedule logic was unit-tested but the target alert used a multi-profile pattern (3 pulses with pauses) and the 30 s pulses 60 % strength. Details (2026-10-31): a 15 s target, Do Not Disturb and sleep mode off; nothing at the target, and the shower was too short to reach a 30 s pulse, so no vibration of any kind was observed. Working theory: the pattern's 0 % pause profiles made `Attention.vibrate` throw, and the `try/catch` swallowed it (0.1.3 uses single profiles only).
 - [ ] **PENDING** (0.1.3) Target alert: 1 s full-strength vibration, repeat 2 s later with a tone on watches with a beeper (tone moved off the first vibration in 0.1.3), green "Target!" screen for 5 s; 30 s pulses (300 ms, full strength) are felt in the shower; also with the target off the 30 s grid (e.g. 2:15). Check with Do Not Disturb on and off (DND can suppress app vibrations).
 - [ ] **PENDING** (0.1.3) Summary heart-rate columns (MIN / AVG / MAX, "HR bpm") are readable and clear of the START/BACK markers on the FR965; simulator screenshots on fr965 and fr255s are in `docs/screenshots/`.
 
