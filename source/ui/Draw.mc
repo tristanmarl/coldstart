@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 
 // Shared drawing helpers (Dc primitives only, so they work on every target).
 module Draw {
@@ -68,21 +69,43 @@ module Draw {
     }
 
     // Heart-rate readout: heart icon left of a large number ("--" when none), centred at y.
-    function heartRate(dc as Graphics.Dc, hr as Number, y as Number) as Void {
+    // ringRadius is the inner edge of the circle it sits in: the largest number font whose row
+    // fits inside that circle at the glyphs' lower edge is used, so three digits never cross it.
+    function heartRate(dc as Graphics.Dc, hr as Number, y as Number, ringRadius as Number) as Void {
         var h = dc.getHeight();
         var str = hr > 0 ? hr.toString() : "--";
-        var font = Graphics.FONT_NUMBER_MEDIUM;
-        if (hr <= 0) {
-            font = Graphics.FONT_LARGE;
-        }
         var r = h / 40 + 1;
-        var tw = dc.getTextWidthInPixels(str, font);
         var gap = r;
-        var total = r * 4 + gap + tw;
+        var fonts = hr > 0 ?
+            [Graphics.FONT_NUMBER_MEDIUM, Graphics.FONT_NUMBER_MILD, Graphics.FONT_LARGE,
+             Graphics.FONT_MEDIUM] as Array<Graphics.FontType> :
+            [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM] as Array<Graphics.FontType>;
+        var font = fonts[fonts.size() - 1];
+        var tw = 0;
+        var total = 0;
+        for (var i = 0; i < fonts.size(); i++) {
+            font = fonts[i];
+            tw = dc.getTextWidthInPixels(str, font);
+            total = r * 4 + gap + tw;
+            if (total <= rowWidth(dc, y, dc.getFontHeight(font) / 3, ringRadius)) {
+                break;
+            }
+        }
         var left = dc.getWidth() / 2 - total / 2;
         heart(dc, left + r * 2, y, r, 0xFF3355);
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
         dc.drawText(left + r * 4 + gap, y, font, str,
             Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
+    // Usable width of a row centred at y whose glyphs reach `half` pixels below y, inside a
+    // circle of the given radius around the screen centre (with a small margin).
+    function rowWidth(dc as Graphics.Dc, y as Number, half as Number, radius as Number) as Number {
+        var dy = (y - dc.getHeight() / 2).abs() + half;
+        var inner = radius - dc.getHeight() / 30;
+        if (dy >= inner) {
+            return 0;
+        }
+        return (2.0 * Math.sqrt((inner * inner - dy * dy).toFloat())).toNumber();
     }
 }

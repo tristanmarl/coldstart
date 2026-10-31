@@ -33,7 +33,7 @@ class ShowerView extends WatchUi.View {
 
         // No target line: the ring and the countdown show it. Big number: countdown before the target, total time from the target on.
         Draw.big(dc, ColdLogic.bigText(app.elapsed, app.target), color);
-        Draw.heartRate(dc, app.hrNow, h * 79 / 100);
+        Draw.heartRate(dc, app.hrNow, h * 75 / 100, radius - (h / 40 + 2) / 2);
         Icons.startMarker(dc, "pause");
     }
 }
