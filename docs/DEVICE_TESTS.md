@@ -45,7 +45,7 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 
 - [ ] **PENDING** Touch ignored during the shower: tapping, swiping, long-pressing and wiping the screen with a wet finger on Home, Shower, Summary and the discard choice never starts, stops, saves, discards or changes the target.
 - [ ] **PENDING** Keys: UP/DOWN change the target in 15 s steps and it is remembered after relaunch; START begins, START stops; a second START within 800 ms is ignored; BACK is ignored during the shower and exits on Home.
-- [ ] **PENDING** Countdown reaches 0:00, then shows orange `+m:ss`; 30 s pulses; long vibration at the target (also with targets not on the 30 s grid).
+- [ ] **PENDING** Countdown reaches 0:00, then shows the total time in blue (0.2.1; earlier versions showed orange `+m:ss`); 30 s pulses; long vibration at the target (also with targets not on the 30 s grid).
 - [ ] **PENDING** Saved activity appears in Garmin Connect as Meditation / Breathing with duration and heart rate; fallback to Generic if the sport is rejected.
 - [ ] **PENDING** FIT field `target_s` is present and Connect shows min/max/avg heart rate natively.
 - [ ] **PENDING** Summary "HR min · avg · max" matches Garmin Connect for the saved activity; it is hidden when no HR was measured; `Sensor.getInfo()` fallback delivers HR if `Activity.getActivityInfo()` does not.

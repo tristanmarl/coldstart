@@ -13,7 +13,7 @@ class ShowerView extends WatchUi.View {
         var h = dc.getHeight();
         var w = dc.getWidth();
         var reached = ColdLogic.justReached(app.elapsed, app.target);
-        var color = reached ? Draw.DONE : (ColdLogic.isOvertime(app.elapsed, app.target) ? Draw.OVER : Draw.COLD);
+        var color = reached ? Draw.DONE : Draw.COLD;
 
         // Progress arc inside the button-hint ring: clockwise from 12 o'clock, full once the
         // target is reached.
