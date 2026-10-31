@@ -11,10 +11,10 @@ ColdStart is a Garmin Connect IQ watch app that times cold showers and saves eac
 ## Usage
 
 - **Home:** target time in the middle (default 2:00), the current streak above, the last saved shower below. UP/DOWN change the target in 15 s steps (0:15 to 15:00, remembered), START begins, BACK exits.
-- **Shower:** the time counts down to the target, then counts overtime as `+m:ss` in orange. A ring shows progress, with the current heart rate below. The watch pulses every 30 s and vibrates long when the target is reached. START stops; BACK is ignored while a shower runs. The backlight is kept on where supported.
-- **Summary:** duration, target hit or missed, average and maximum heart rate, and one line "HR min · avg · max" below. START saves the activity, BACK (or MENU) asks to discard. Showers shorter than 10 s default to discard. If the app is stopped mid-shower the session is saved as it is (discarded when under 10 s).
+- **Shower:** the time counts down to the target, then counts overtime as `+m:ss` in orange. A ring shows progress, with the current heart rate below. The watch pulses every 30 s (300 ms), and at the target vibrates for 1 s, sounds a tone where the watch has a beeper, and repeats the 1 s vibration 2 s later; the screen turns green and shows "Target!" for 5 s. Garmin's "Do Not Disturb" can suppress app vibrations and tones, so turn it off for showers. START stops; BACK is ignored while a shower runs. The backlight is kept on where supported.
+- **Summary:** duration, target hit or missed, average and maximum heart rate, and heart rate as three columns (MIN, AVG, MAX in bpm) below. START saves the activity, BACK (or MENU) asks to discard. Showers shorter than 10 s default to discard. If the app is stopped mid-shower the session is saved as it is (discarded when under 10 s).
 
-The activity is saved with duration and heart rate (Garmin Connect shows min, max and average HR natively) plus one custom session field, `target_s`. The Summary shows "HR min · avg · max" and hides it when no heart rate was measured.
+The activity is saved with duration and heart rate (Garmin Connect shows min, max and average HR natively) plus one custom session field, `target_s`. The Summary shows MIN, AVG and MAX heart rate in three labelled columns and hides them when no heart rate was measured.
 
 The streak counts consecutive local calendar days with at least one saved shower; a day without a shower yet does not break a streak that ran through yesterday. Only the streak and the last duration are stored, in `Application.Storage`.
 

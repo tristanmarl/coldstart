@@ -17,6 +17,12 @@ Simulator checks are not hardware acceptance; marks are upgraded only from recor
 - [ ] **PENDING** (0.1.2, FR965) Touch really ignored on the watch: tap, long-press and swipe on Home, Shower, Summary and the discard choice do nothing; the five physical keys still work as listed below (START, BACK, UP, DOWN, hold UP does nothing). LIGHT keeps its firmware behaviour.
 - [ ] **PENDING** (0.1.2) Physical keys reach `onKey` with one action per press (no double action from press/release), including BACK on Home exiting the app. Verified only in the simulator by clicking the drawn buttons.
 
+## Target vibration (user report, physical FR965)
+
+- [x] **FAILED** (0.1.2, user report) No vibration was felt when the target was reached. The schedule logic was unit-tested but the target alert used a multi-profile pattern (3 pulses with pauses) and the 30 s pulses 60 % strength.
+- [ ] **PENDING** (0.1.3) Target alert: 1 s full-strength vibration, repeat 2 s later, tone on watches with a beeper, green "Target!" screen for 5 s; 30 s pulses (300 ms, full strength) are felt in the shower; also with the target off the 30 s grid (e.g. 2:15). Check with Do Not Disturb on and off (DND can suppress app vibrations).
+- [ ] **PENDING** (0.1.3) Summary heart-rate columns (MIN / AVG / MAX, "HR bpm") are readable and clear of the START/BACK markers on the FR965; simulator screenshots on fr965 and fr255s are in `docs/screenshots/`.
+
 ## Pending physical-watch checks (FR965)
 
 - [ ] **PENDING** (0.1.1) Crash recovery: kill the app (or pull the battery path via a forced restart) during a shower of 30 s or more; on the next launch Home shows "Recovered m:ss", the streak day and "Last" are credited from the checkpoint, and no FIT activity exists for it. A kill within the first 10 s credits nothing.

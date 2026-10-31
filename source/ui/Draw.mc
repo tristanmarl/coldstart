@@ -6,6 +6,7 @@ module Draw {
     const COLD = 0x33BBFF;
     const OVER = 0xFF8800;
     const DIM = 0x8899AA;
+    const DONE = 0x22DD77;
 
     function clear(dc as Graphics.Dc) as Void {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
@@ -18,6 +19,13 @@ module Draw {
         dc.setColor(color, Graphics.COLOR_TRANSPARENT);
         dc.drawText(dc.getWidth() / 2, y, font,
             str, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
+    // Text centred on x (columns).
+    function textAt(dc as Graphics.Dc, str as String, x as Number, y as Number,
+                    font as Graphics.FontType, color as Number) as Void {
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y, font, str, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     function small(dc as Graphics.Dc) as Graphics.FontType {

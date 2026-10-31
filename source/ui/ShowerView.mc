@@ -13,7 +13,8 @@ class ShowerView extends WatchUi.View {
         var h = dc.getHeight();
         var w = dc.getWidth();
         var over = ColdLogic.isOvertime(app.elapsed, app.target);
-        var color = over ? Draw.OVER : Draw.COLD;
+        var reached = ColdLogic.justReached(app.elapsed, app.target);
+        var color = reached ? Draw.DONE : (over ? Draw.OVER : Draw.COLD);
 
         // Progress arc inside the button-hint ring: clockwise from 12 o'clock, full once the
         // target is reached.
@@ -31,8 +32,12 @@ class ShowerView extends WatchUi.View {
         }
         dc.setPenWidth(1);
 
-        Draw.text(dc, over ? "Overtime" : "Target " + ColdLogic.formatClock(app.target),
-            h * 28 / 100, Draw.small(dc), Draw.DIM);
+        if (reached) {
+            Draw.text(dc, "Target!", h * 28 / 100, Draw.small(dc), Draw.DONE);
+        } else {
+            Draw.text(dc, over ? "Overtime" : "Target " + ColdLogic.formatClock(app.target),
+                h * 28 / 100, Draw.small(dc), Draw.DIM);
+        }
         Draw.big(dc, ColdLogic.countdownText(app.elapsed, app.target), color);
         var hr = app.hrNow > 0 ? "HR " + app.hrNow.toString() : "HR --";
         Draw.text(dc, hr, h * 70 / 100, Draw.small(dc), Graphics.COLOR_WHITE);

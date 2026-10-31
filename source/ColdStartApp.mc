@@ -23,6 +23,8 @@ class ColdStartApp extends Application.AppBase {
     private var _dayIndex as Number = 0;
     private var _lastStartPressAt as Number = -10000;
     private var _tickCount as Number = 0;
+    private var _sinceLight as Number = 0;
+    private var _alertRepeatAt as Number = 0;
     private var _hr as HrTracker = new HrTracker();
 
     public var target as Number = ColdLogic.TARGET_DEFAULT;
@@ -133,6 +135,8 @@ class ColdStartApp extends Application.AppBase {
         hrNow = 0;
         _hr = new HrTracker();
         _tickCount = 0;
+        _sinceLight = 0;
+        _alertRepeatAt = 0;
         ColdStore.saveOpen([_startedAt, _dayIndex, target, 0] as Array<Number>);
         _state = STATE_RUNNING;
         _timer.start(method(:onTick), 1000, true);
@@ -206,28 +210,47 @@ class ColdStartApp extends Application.AppBase {
         var previous = elapsed;
         elapsed = ColdLogic.elapsedSec(_startMs, System.getTimer());
         _tickCount++;
-        var vibe = ColdLogic.vibeBetween(previous, elapsed, target);
-        if (vibe != ColdLogic.VIBE_NONE && (Attention has :vibrate)) {
-            try {
-                if (vibe == ColdLogic.VIBE_TARGET) {
-                    Attention.vibrate([new Attention.VibeProfile(100, 600),
-                        new Attention.VibeProfile(0, 150), new Attention.VibeProfile(100, 600),
-                        new Attention.VibeProfile(0, 150), new Attention.VibeProfile(100, 600)]);
-                } else {
-                    Attention.vibrate([new Attention.VibeProfile(60, 200)]);
-                }
-            } catch (error) {
-            }
+        var step = ColdLogic.alertStep(previous, elapsed, target, _alertRepeatAt);
+        var vibe = step[0];
+        _alertRepeatAt = step[1];
+        var vibrating = vibe != ColdLogic.VIBE_NONE;
+        if (vibrating) {
+            alert(vibe);
         }
         sampleHeartRate();
-        // Crash-recovery checkpoint 15 s after each vibration second (never in a vibrating tick).
-        if (vibe == ColdLogic.VIBE_NONE && ColdLogic.checkpointDue(elapsed)) {
+        // No storage write or backlight call in a vibrating tick. The crash-recovery checkpoint is
+        // written 15 s after each pulse second.
+        if (!vibrating && ColdLogic.checkpointDue(elapsed)) {
             ColdStore.saveOpen([_startedAt, _dayIndex, target, elapsed] as Array<Number>);
         }
-        if (_tickCount % 10 == 0) {
+        _sinceLight++;
+        if (!vibrating && _sinceLight >= 10) {
+            _sinceLight = 0;
             keepScreenOn();
         }
         WatchUi.requestUpdate();
+    }
+
+    // Single-profile vibrations (the pattern confirmed on the FR965): 1 s at full strength for the
+    // target (and its repeat), 300 ms for the 30 s pulses; the target also sounds a tone where the
+    // watch has a beeper.
+    private function alert(kind as Number) as Void {
+        try {
+            if (Attention has :vibrate) {
+                if (kind == ColdLogic.VIBE_PULSE) {
+                    Attention.vibrate([new Attention.VibeProfile(100, 300)]);
+                } else {
+                    Attention.vibrate([new Attention.VibeProfile(100, 1000)]);
+                }
+            }
+        } catch (error) {
+        }
+        try {
+            if (kind == ColdLogic.VIBE_TARGET && (Attention has :playTone)) {
+                Attention.playTone(Attention.TONE_ALERT_HI);
+            }
+        } catch (error) {
+        }
     }
 
     // Current heart rate or null: Activity info first, then the sensor as fallback.

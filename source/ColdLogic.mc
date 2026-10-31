@@ -15,6 +15,9 @@ module ColdLogic {
     const VIBE_NONE = 0;
     const VIBE_PULSE = 1;
     const VIBE_TARGET = 2;
+    const VIBE_REPEAT = 3;
+    const ALERT_REPEAT_SEC = 2;
+    const ALERT_SHOW_SEC = 5;
 
     function floorDiv(a as Number, b as Number) as Number {
         var q = a / b;
@@ -84,7 +87,31 @@ module ColdLogic {
         if (sec == target) {
             return VIBE_TARGET;
         }
+        // A pulse right after the target alert would cut its 1 s vibration short.
+        if (sec > target && sec - target < ALERT_REPEAT_SEC + 1) {
+            return VIBE_NONE;
+        }
         return (sec % PULSE_EVERY == 0) ? VIBE_PULSE : VIBE_NONE;
+    }
+
+    // One vibration decision per tick: returns [kind, repeatAt]. The target alert fires once and
+    // schedules a second identical one ALERT_REPEAT_SEC later (repeatAt, 0 = none) from a later
+    // tick, so no timer is needed. Late ticks cannot lose or duplicate either alert.
+    function alertStep(previous as Number, now as Number, target as Number,
+                       repeatAt as Number) as Array<Number> {
+        var kind = vibeBetween(previous, now, target);
+        if (kind == VIBE_TARGET) {
+            return [VIBE_TARGET, now + ALERT_REPEAT_SEC] as Array<Number>;
+        }
+        if (repeatAt > 0 && now >= repeatAt) {
+            return [VIBE_REPEAT, 0] as Array<Number>;
+        }
+        return [kind, repeatAt] as Array<Number>;
+    }
+
+    // The Shower screen flashes "Target!" for the first few seconds after the target.
+    function justReached(elapsed as Number, target as Number) as Boolean {
+        return elapsed >= target && elapsed - target < ALERT_SHOW_SEC;
     }
 
     // Strongest vibration due in the seconds after `previous` up to and including `now`, so a
@@ -116,12 +143,12 @@ module ColdLogic {
         return hr != null && hr >= HR_MIN && hr <= HR_MAX;
     }
 
-    // "HR 62 · 74 · 118" (min, avg, max); null when nothing was measured.
-    function hrLine(min as Number?, avg as Number?, max as Number?) as String? {
+    // Heart-rate summary as three column strings [min, avg, max]; null when nothing was measured.
+    function hrColumns(min as Number?, avg as Number?, max as Number?) as Array<String>? {
         if (min == null || avg == null || max == null) {
             return null;
         }
-        return "HR " + min.toString() + " · " + avg.toString() + " · " + max.toString();
+        return [min.toString(), avg.toString(), max.toString()] as Array<String>;
     }
 
     // --- Elapsed time and crash recovery ----------------------------------------------------------

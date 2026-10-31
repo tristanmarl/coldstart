@@ -16,9 +16,18 @@ class SummaryView extends WatchUi.View {
         Draw.text(dc, tooShort ? "Too short" : (hit ? "Target hit" : "Target missed"),
             h * 28 / 100, Draw.small(dc), tooShort || !hit ? Draw.OVER : Draw.COLD);
         Draw.big(dc, ColdLogic.formatClock(app.elapsed), Graphics.COLOR_WHITE);
-        var line = ColdLogic.hrLine(app.hrMin(), app.hrAverage(), app.hrMax());
-        if (line != null) {
-            Draw.text(dc, line as String, h * 70 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
+        var cols = ColdLogic.hrColumns(app.hrMin(), app.hrAverage(), app.hrMax());
+        if (cols != null) {
+            // Three columns inside the safe area: numbers at 70 %, labels at 78 %, unit at 86 %.
+            var w = dc.getWidth();
+            var xs = [w * 32 / 100, w / 2, w * 68 / 100] as Array<Number>;
+            var labels = ["MIN", "AVG", "MAX"] as Array<String>;
+            var values = cols as Array<String>;
+            for (var i = 0; i < 3; i++) {
+                Draw.textAt(dc, values[i], xs[i], h * 70 / 100, Draw.small(dc), Graphics.COLOR_WHITE);
+                Draw.textAt(dc, labels[i], xs[i], h * 78 / 100, Graphics.FONT_XTINY, Draw.DIM);
+            }
+            Draw.text(dc, "HR bpm", h * 86 / 100, Graphics.FONT_XTINY, Draw.DIM);
         }
         Icons.startMarker(dc, "check");
         Icons.backMarker(dc, "cross");

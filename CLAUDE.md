@@ -35,7 +35,7 @@ scripts/test.sh                                # build + run; exit 0 only on "PA
 ## Rules
 
 - Timer callbacks passed to `method(:x)` must be public.
-- No storage writes in the vibration tick; `onTick` stays light (HR reads only).
+- No storage writes and no backlight call in a vibrating tick; `onTick` stays light (HR reads only). Vibrations are single-profile (`VibeProfile(100, 1000)` at the target and again 2 s later via `_alertRepeatAt` from a later tick, `VibeProfile(100, 300)` for the 30 s pulses) plus `Attention.playTone` at the target, all through `ColdLogic.alertStep` (pure, unit-tested). Do not use multi-profile patterns: the FR965 did not vibrate for them (0.1.2).
 - Elapsed time is measured with `System.getTimer()` deltas (`ColdLogic.elapsedSec`), never `Time.now()` differences, so a clock sync cannot make it jump; `Time.now()` is only used for the start timestamp and day index.
 - Crash recovery: `startShower` writes the storage key `open` = `[startedAtUtc, dayIndex, target, elapsedSec]`; `onTick` refreshes it when `elapsed % 30 == 15` (never in a vibrating second); save/discard clear it. `onStart` credits a leftover `open` (streak day + last duration) via `ColdLogic.openCredit` if it was at least 10 s and shows "Recovered m:ss". The FIT activity is not recoverable.
 - `monkeyc -l 3` (strict typecheck) must build clean for fr965 and fr255s.

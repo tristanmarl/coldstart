@@ -138,12 +138,80 @@ function testHrTracker(logger as Test.Logger) as Boolean {
 }
 
 (:test)
-function testHrLine(logger as Test.Logger) as Boolean {
-    var line = ColdLogic.hrLine(62, 74, 118);
-    var ok = check(logger, line != null && (line as String).equals("HR 62 · 74 · 118"), "line format");
-    ok = ok && check(logger, ColdLogic.hrLine(null, null, null) == null, "hidden without HR");
+function testHrColumns(logger as Test.Logger) as Boolean {
+    var cols = ColdLogic.hrColumns(62, 74, 118);
+    var ok = check(logger, cols != null, "columns present");
+    if (cols != null) {
+        var c = cols as Array<String>;
+        ok = ok && check(logger, c[0].equals("62") && c[1].equals("74") && c[2].equals("118"), "min, avg, max order");
+    }
+    ok = ok && check(logger, ColdLogic.hrColumns(null, null, null) == null, "hidden without HR");
     ok = ok && check(logger, ColdLogic.validHr(30) && ColdLogic.validHr(250), "valid range");
     ok = ok && check(logger, !ColdLogic.validHr(29) && !ColdLogic.validHr(251) && !ColdLogic.validHr(null), "invalid range");
+    return ok;
+}
+
+// Runs the per-tick alert decision over a list of elapsed seconds; returns [targets, repeats,
+// secondOfRepeat].
+function runAlerts(ticks as Array<Number>, target as Number) as Array<Number> {
+    var prev = 0;
+    var repeatAt = 0;
+    var targets = 0;
+    var repeats = 0;
+    var repeatSec = -1;
+    for (var i = 0; i < ticks.size(); i++) {
+        var step = ColdLogic.alertStep(prev, ticks[i], target, repeatAt);
+        repeatAt = step[1];
+        if (step[0] == ColdLogic.VIBE_TARGET) {
+            targets++;
+        } else if (step[0] == ColdLogic.VIBE_REPEAT) {
+            repeats++;
+            repeatSec = ticks[i];
+        }
+        prev = ticks[i];
+    }
+    return [targets, repeats, repeatSec] as Array<Number>;
+}
+
+function everySecond(last as Number) as Array<Number> {
+    var out = [] as Array<Number>;
+    for (var s = 1; s <= last; s++) {
+        out.add(s);
+    }
+    return out;
+}
+
+(:test)
+function testTargetAlertFiresOnce(logger as Test.Logger) as Boolean {
+    var targets = [120, 135, 45, 30, 15] as Array<Number>;
+    var ok = true;
+    for (var i = 0; i < targets.size(); i++) {
+        var r = runAlerts(everySecond(targets[i] + 40), targets[i]);
+        ok = ok && check(logger, r[0] == 1, "one target alert for " + targets[i].toString());
+        ok = ok && check(logger, r[1] == 1, "one repeat for " + targets[i].toString());
+        ok = ok && check(logger, r[2] == targets[i] + 2, "repeat 2 s later for " + targets[i].toString());
+    }
+    return ok;
+}
+
+(:test)
+function testTargetAlertWithSkippedTicks(logger as Test.Logger) as Boolean {
+    // Target 135 (not a multiple of 30): ticks skip 134-136, then 137 is late for the repeat.
+    var ticks = [100, 133, 137, 138, 150] as Array<Number>;
+    var r = runAlerts(ticks, 135);
+    var ok = check(logger, r[0] == 1, "late tick still gives one target alert");
+    ok = ok && check(logger, r[1] == 1 && r[2] == 150, "repeat fires once, on the first tick at or after +2 s");
+    // Target 120 with the target second skipped.
+    var r2 = runAlerts([60, 119, 121, 122, 123, 124] as Array<Number>, 120);
+    ok = ok && check(logger, r2[0] == 1 && r2[1] == 1 && r2[2] == 123, "multiple of 30, skipped target tick");
+    // No alert before the target.
+    var r3 = runAlerts(everySecond(100), 120);
+    ok = ok && check(logger, r3[0] == 0 && r3[1] == 0, "nothing before the target");
+    // No pulse right after the target alert (it would cut the vibration).
+    ok = ok && check(logger, ColdLogic.vibeAt(30, 29) == ColdLogic.VIBE_NONE, "pulse at 30 suppressed after target 29");
+    ok = ok && check(logger, ColdLogic.vibeAt(60, 29) == ColdLogic.VIBE_PULSE, "pulses resume later");
+    ok = ok && check(logger, ColdLogic.justReached(120, 120) && ColdLogic.justReached(124, 120), "Target! shown for 5 s");
+    ok = ok && check(logger, !ColdLogic.justReached(119, 120) && !ColdLogic.justReached(125, 120), "and not outside that window");
     return ok;
 }
 
